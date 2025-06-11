@@ -1,0 +1,1238 @@
+body {
+    margin: 0%;
+    padding: 0%;
+    background-image: url(bck.png);
+  }
+  
+  .pvid {
+    width: 80%;
+    height: auto;
+    margin: 20px;
+    border-radius: 20px;
+    border: 3px solid red;
+  }
+
+  .mvid{
+    display: none;
+  }
+  
+  .cont h1 {
+    color: white;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+  }
+  
+  .cont a {
+    color: white;
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    text-decoration: none;
+    background-color: rgb(146, 143, 140);
+    width: 7vw;
+    border-radius: 10px;
+  
+  }
+  
+  .cont a:hover {
+    background-color: rgb(112, 110, 107);
+    transition: 750ms;
+    border: solid red 2px;
+  }
+  
+  
+  
+  
+  /*Start Page*/
+  
+  
+  nav h1 {
+    font-size: 40px;
+    color: white;
+  }
+  
+  #startcont {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: block;
+  }
+  
+  
+  
+  .q-cont {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans,
+  .ans2 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans2 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  
+  #cw {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  
+  
+  /*2nd*/
+  
+  #startcont1 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont1 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques1 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans11,
+  .ans21 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans11 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans21 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next1 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  
+  #cw1 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points1 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  
+  /*3rd*/
+  
+  #startcont2 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont2 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques2 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans12,
+  .ans22 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans12 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans22 button {
+    font-size: 30px;
+    width: 70vw;
+    margin: 80px;
+    cursor: pointer;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  
+  #next2 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  
+  #cw2 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points2 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  /*4th*/
+  
+  #startcont3 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont3 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques3 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans13,
+  .ans23 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans13 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans23 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next3 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  
+  #cw3 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points3 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  
+  /*5th*/
+  
+  #startcont4 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont4 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques4 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans14,
+  .ans24 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans14 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans24 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next4 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  
+  #cw4 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points4 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  
+  
+  /*6th*/
+  
+  #startcont5 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont5 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques5 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans15,
+  .ans25 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans15 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans25 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next5 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  
+  #cw5 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points5 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  
+  
+  
+  /*7th*/
+  
+  #startcont6 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont6 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques6 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans16,
+  .ans26 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans16 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans26 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next6 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  
+  #cw6 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points6 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  
+  
+  /*8th*/
+  
+  #startcont7 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont7 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques7 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans17,
+  .ans27 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans17 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans27 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next7 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  
+  #cw7 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points7 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  /*9th*/
+  
+  #startcont8 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont8 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques8 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans18,
+  .ans28 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans18 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans28 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next8 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  
+  #cw8 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points8 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  
+  /*10th*/
+  
+  #startcont9 {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .q-cont9 {
+    margin: 20px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 60vw;
+    height: 30vh;
+  }
+  
+  #ques9 {
+    font-size: 40px;
+    color: white;
+    padding: 60px;
+  }
+  
+  .ans19,
+  .ans29 {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  
+  }
+  
+  .ans19 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  .ans29 button {
+    font-size: 30px;
+    width: 20vw;
+    margin: 70px;
+    cursor: pointer;
+    height: 80px;
+    border-radius: 10px;
+  }
+  
+  
+  #next9 {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  
+  #cw9 {
+    font-size: 40px;
+    color: white;
+    display: none;
+    position: absolute;
+    left: 15%;
+    top: 50%;
+  }
+  
+  #points9 {
+    position: absolute;
+    left: 80%;
+    top: 0%;
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  /*end*/
+  
+  #endcont {
+    width: 80vw;
+    height: auto;
+    margin: 20px;
+    display: none;
+  }
+  
+  
+  
+  .x-cont {
+    margin: 60px;
+    background-color: rgb(112, 110, 107);
+    border-radius: 20px;
+    width: 40vw;
+    height: 30vh;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+  }
+  
+  #ew {
+    font-size: 40px;
+    color: white;
+    position: absolute;
+    left: 33%;
+    top: 35%;
+  }
+  
+  
+  #rty {
+    position: absolute;
+    font-size: 30px;
+    width: 15vw;
+    left: 40%;
+    cursor: pointer;
+    display: none;
+    top: 80%;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 10px;
+  }
+  
+  /*Mobile Responsive*/
+  
+  /* ========== Responsive Design ========== */
+  
+  /* Tablets (<= 1024px) */
+  @media (max-width: 1024px) {
+    .cont video {
+      width: 90%;
+      margin: 10px auto;
+    }
+  
+    .cont h1,
+    .cont a {
+      font-size: 32px;
+    }
+
+    #points{
+     margin: 5px;
+     font-size: 20px;
+     margin: 5px;
+     color: white;
+    
+    }
+
+ .hh{
+  font-size: 30px;
+  padding: 10px;
+  
+ }
+    #ques,
+    #ques1,
+    #ques2,
+    #ques3,
+    #ques4,
+    #ques5,
+    #ques6,
+    #ques7,
+    #ques8,
+    #ques9 {
+      font-size: 32px;
+      padding: 40px 20px;
+    }
+  
+    .ans button,
+    .ans2 button,
+    .ans11 button,
+    .ans21 button,
+    .ans12 button,
+    .ans22 button,
+    .ans13 button,
+    .ans23 button,
+    .ans14 button,
+    .ans24 button,
+    .ans15 button,
+    .ans25 button,
+    .ans16 button,
+    .ans26 button,
+    .ans17 button,
+    .ans27 button,
+    .ans18 button,
+    .ans28 button,
+    .ans19 button,
+    .ans29 button {
+      font-size: 24px;
+      width: 35vw;
+      margin: 20px;
+    }
+  
+    #next,
+    #next1,
+    #next2,
+    #next3,
+    #next4,
+    #next5,
+    #next6,
+    #next7,
+    #next8,
+    #next9 {
+      width: 25vw;
+      font-size: 24px;
+    }
+  
+    #cw,
+    #cw1,
+    #cw2,
+    #cw3,
+    #cw4,
+    #cw5 {
+      font-size: 30px;
+    }
+  }
+  
+  /* Mobile Devices (<= 600px) */
+  @media (max-width: 600px) {
+    .mvid {
+      display: block;
+      border: 2px solid red;
+      border-radius: 10px;
+      width: 95%;
+      margin: 10px auto;
+      height: 88vh;
+    }
+  
+    .pvid{
+     display: none;
+    }
+
+    .cont h1,
+    .cont a {
+      font-size: 24px;
+      text-align: center;
+      width: 80%;
+    }
+  
+    .cont a {
+      padding: 10px;
+      width: auto;
+    }
+  
+    .q-cont,
+    .q-cont1,
+    .q-cont2,
+    .q-cont3,
+    .q-cont4,
+    .q-cont5,
+    .q-cont6,
+    .q-cont7,
+    .q-cont8,
+    .q-cont9{
+      width: 90vw;
+      height: 20vh;
+      margin: 40px auto;
+      position: relative;
+      right: 5%;
+    }
+  
+    #ques,
+    #ques1,
+    #ques2,
+    #ques3,
+    #ques4,
+    #ques5,
+    #ques6,
+    #ques7,
+    #ques8,
+    #ques9 {
+      font-size: 20px;
+      padding: 20px 10px;
+  
+    }
+  
+    .ans,
+    .ans2,
+    .ans11,
+    .ans21,
+    .ans12,
+    .ans22,
+    .ans13,
+    .ans23,
+    .ans14,
+    .ans24,
+    .ans15,
+    .ans25,
+    .ans16,
+    .ans26,
+    .ans17,
+    .ans27,
+    .ans18,
+    .ans28,
+    .ans19,
+    .ans29 {
+      flex-direction: column;
+    }
+  
+    .ans button,
+    .ans2 button,
+    .ans11 button,
+    .ans21 button,
+    .ans12 button,
+    .ans22 button,
+    .ans13 button,
+    .ans23 button,
+    .ans14 button,
+    .ans24 button,
+    .ans15 button,
+    .ans25 button,
+    .ans16 button,
+    .ans26 button,
+    .ans17 button,
+    .ans27 button,
+    .ans18 button,
+    .ans28 button,
+    .ans19 button,
+    .ans29 button {
+      font-size: 20px;
+      width: 95vw;
+      margin: 10px 0;
+      height: 50px;
+  
+    }
+  
+    #next,
+    #next1,
+    #next2,
+    #next3,
+    #next4,
+    #next5,
+    #next6,
+    #next7,
+    #next8,
+    #next9,
+    #rty {
+      width: 50vw;
+      font-size: 20px;
+      left: 25%;
+      height: 40px;
+      top: 90%;
+    }
+  
+    #cw{
+       font-size: 24px;
+      right: 20%;
+      top: 50%;
+    }
+    
+    #cw1,
+    #cw2,
+    #cw3,
+    #cw4,
+    #cw5,
+    #cw6,
+    #cw7,
+    #cw8,
+    #cw9,
+    #ew {
+      font-size: 24px;
+      left: 5%;
+      top: 50%;
+    }
+  
+    #points,
+    #points1,
+    #points2,
+    #points3,
+    #points4,
+    #points5,
+    #points6,
+    #points7,
+    #points8,
+    #points9 {
+      left: 70%;
+      font-size: 18px;
+    }
+  }
+
+.x-cont{
+      position: absolute;
+      top: 20%;
+      left: 35%; /* Set the left edge to the horizontal center */
+      transform: translateX(-50%); /* Shift the element left by half its width */
+      width: 80vw;
+      height: 30vh;
+    }
