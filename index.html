@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The 90th Minute — Football Quiz</title>
-<meta name="description" content="Test your football knowledge across the Premier League, La Liga, Champions League and World Cup. 10 questions. 90 seconds. Can you handle the pressure?">
+<meta name="description" content="Test your football knowledge. Guess the footballer. Collect legends.">
 <meta property="og:title" content="The 90th Minute — Football Quiz">
-<meta property="og:description" content="5 quiz categories. 50 questions. One leaderboard. Are you a football legend?">
-<meta property="og:type" content="website">
 <meta name="theme-color" content="#0a1628">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,18 +18,21 @@
 <div id="home-screen" class="screen active">
   <div class="home-top-bar">
     <div class="player-rank-pill" id="rank-pill-btn">
-      <span class="rank-icon" id="home-rank-icon">🟤</span>
+      <span class="rank-icon" id="home-rank-icon">🥉</span>
       <div>
         <div id="home-rank-name" style="font-size:13px;font-weight:700;">Bronze</div>
         <div class="rank-xp" id="home-rank-xp">0 XP</div>
       </div>
     </div>
-    <button class="leaderboard-btn" id="leaderboard-open-btn">🏆 Leaderboard</button>
+    <div style="display:flex;gap:8px;">
+      <button class="collectables-btn" id="collectables-open-btn">🃏 Collection</button>
+      <button class="leaderboard-btn" id="leaderboard-open-btn">🏆 Leaderboard</button>
+    </div>
   </div>
 
   <p class="home-eyebrow">⚽ Football Trivia</p>
   <h1 class="home-title">The 90th<span>Minute</span></h1>
-  <p class="home-subtitle">Test your football knowledge across 4 competitions. 10 random questions from a pool of 90+. No two games are the same.</p>
+  <p class="home-subtitle">Test your knowledge, guess the footballer, collect legends. No two games are the same.</p>
 
   <div class="category-grid">
     <div class="category-card weekly" data-quiz="weekly">
@@ -40,6 +41,13 @@
         <div class="category-name">WEEKLY EVENT</div>
         <div class="category-desc">Mixed questions spanning all competitions</div>
       </div>
+    </div>
+    <!-- GUESS THE FOOTBALLER -->
+    <div class="category-card guess-card" data-mode="guess">
+      <div class="category-icon">🕵️</div>
+      <div class="category-name">GUESS THE FOOTBALLER</div>
+      <div class="category-desc">Clues reveal one by one — name the legend</div>
+      <div class="guess-tag">+ Collectables</div>
     </div>
     <div class="category-card prem-card" data-quiz="prem">
       <div class="category-icon">🦁</div>
@@ -97,18 +105,9 @@
     <h2 class="modal-title">Ready?</h2>
     <p class="modal-category-name" id="modal-cat-name">PREMIER LEAGUE</p>
     <div class="modal-xp-preview">
-      <div class="xp-item">
-        <div class="xp-item-val">+10</div>
-        <div class="xp-item-label">Per Answer</div>
-      </div>
-      <div class="xp-item">
-        <div class="xp-item-val">+5</div>
-        <div class="xp-item-label">Streak Bonus</div>
-      </div>
-      <div class="xp-item">
-        <div class="xp-item-val">+20</div>
-        <div class="xp-item-label">Perfect Score</div>
-      </div>
+      <div class="xp-item"><div class="xp-item-val">+10</div><div class="xp-item-label">Per Answer</div></div>
+      <div class="xp-item"><div class="xp-item-val">+5</div><div class="xp-item-label">Streak Bonus</div></div>
+      <div class="xp-item"><div class="xp-item-val">+20</div><div class="xp-item-label">Perfect Score</div></div>
     </div>
     <ul class="rules-list">
       <li><div class="rule-num">1</div>10 questions — easy to impossible difficulty</li>
@@ -135,11 +134,9 @@
       <span id="score-display">0</span>
     </div>
   </div>
-
   <div class="progress-bar-wrap">
     <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
   </div>
-
   <div class="timer-row">
     <span class="timer-icon">⏱</span>
     <div class="timer-bar-wrap">
@@ -147,7 +144,6 @@
     </div>
     <span class="timer-count" id="timer-count">90</span>
   </div>
-
   <div class="quiz-body" id="quiz-body">
     <div class="difficulty-tag" id="diff-tag">Easy</div>
     <h2 class="question-text" id="question-text">Loading...</h2>
@@ -183,12 +179,9 @@
       <div class="results-score-denom">out of 10</div>
     </div>
   </div>
-
   <h2 class="results-grade" id="results-grade">Solid Display</h2>
   <p class="results-quote" id="results-quote">"Decent. Not special... yet."</p>
   <p class="results-attribution" id="results-attr">— Jose Mourinho</p>
-
-  <!-- XP & Rank Section -->
   <div class="results-xp-section">
     <div class="xp-gained-banner">
       <div class="xp-gained-left">
@@ -198,7 +191,7 @@
       </div>
       <div class="rank-progress-block">
         <div class="rank-badge-large">
-          <span class="rank-badge-icon-lg" id="results-rank-icon">🟤</span>
+          <span class="rank-badge-icon-lg" id="results-rank-icon">🥉</span>
           <span class="rank-badge-name" id="results-rank-name">Bronze</span>
         </div>
         <div class="rank-progress-bar-wrap">
@@ -209,30 +202,151 @@
     </div>
     <div class="rank-up-banner" id="rank-up-banner">🎉 RANK UP! Welcome to <span id="rank-up-name"></span>!</div>
   </div>
-
   <div class="results-stats">
-    <div class="stat-pill">
-      <div class="stat-num" id="stat-correct">0</div>
-      <div class="stat-label">Correct</div>
-    </div>
-    <div class="stat-pill">
-      <div class="stat-num" id="stat-wrong">0</div>
-      <div class="stat-label">Wrong</div>
-    </div>
-    <div class="stat-pill">
-      <div class="stat-num" id="stat-pct">0%</div>
-      <div class="stat-label">Accuracy</div>
-    </div>
-    <div class="stat-pill">
-      <div class="stat-num" id="stat-total-xp">0</div>
-      <div class="stat-label">Total XP</div>
-    </div>
+    <div class="stat-pill"><div class="stat-num" id="stat-correct">0</div><div class="stat-label">Correct</div></div>
+    <div class="stat-pill"><div class="stat-num" id="stat-wrong">0</div><div class="stat-label">Wrong</div></div>
+    <div class="stat-pill"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">Accuracy</div></div>
+    <div class="stat-pill"><div class="stat-num" id="stat-total-xp">0</div><div class="stat-label">Total XP</div></div>
   </div>
-
   <div class="results-actions">
     <button class="btn-primary" id="retry-btn">Play Again ↺</button>
     <button class="btn-secondary" id="home-btn">← All Categories</button>
   </div>
+</div>
+
+<!-- ══ GUESS THE FOOTBALLER SCREEN ══ -->
+<div id="guess-screen" class="screen">
+  <div class="quiz-header">
+    <div class="quiz-back" id="guess-back-btn" role="button">←</div>
+    <div class="quiz-meta">
+      <div class="quiz-category-label" style="color:#a78bfa;">🕵️ GUESS THE FOOTBALLER</div>
+      <div class="quiz-progress-text" id="guess-progress-text">Footballer 1 of 8</div>
+    </div>
+    <div class="lives-display" id="lives-display">
+      <span class="life" id="life-0">❤️</span>
+      <span class="life" id="life-1">❤️</span>
+      <span class="life" id="life-2">❤️</span>
+    </div>
+    <div class="score-badge" style="border-color:rgba(167,139,250,0.3);">
+      <span class="score-badge-icon">🃏</span>
+      <span id="guess-score-display">0</span>
+      <span class="mult-badge" id="mult-badge" style="display:none;">×1</span>
+    </div>
+  </div>
+  <div class="guess-streak-banner" id="guess-streak-banner">
+    <span id="guess-streak-text">🔥 3× Streak — 1.5× Multiplier!</span>
+  </div>
+
+  <div class="guess-body" id="guess-body">
+    <!-- Clue Cards Stack -->
+    <div class="clue-stage" id="clue-stage">
+      <div class="clues-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="clue-points-badge" id="clue-points-badge">🌟 5 Points</div>
+          <div class="footballer-diff-badge" id="footballer-diff-badge">Easy</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="ft-timer" id="ft-timer">
+            <svg class="ft-timer-svg" viewBox="0 0 44 44">
+              <circle class="ft-ring-bg" cx="22" cy="22" r="18"/>
+              <circle class="ft-ring-fill" id="ft-ring-fill" cx="22" cy="22" r="18"/>
+            </svg>
+            <div class="ft-timer-num" id="footballer-timer-num">30</div>
+          </div>
+          <div class="clue-counter" id="clue-counter">Clue 1 of 5</div>
+        </div>
+      </div>
+      <div class="clue-cards-wrap" id="clue-cards-wrap">
+        <!-- Clue cards rendered by JS -->
+      </div>
+      <div class="reveal-clue-btn-wrap">
+        <button class="btn-reveal-clue" id="reveal-clue-btn">👁 Reveal Next Clue (-1 pt)</button>
+      </div>
+    </div>
+
+    <!-- Answer Input -->
+    <div class="guess-input-section">
+      <div class="guess-options" id="guess-options"></div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="guess-feedback" id="guess-feedback" style="display:none;">
+      <div class="guess-feedback-icon" id="guess-feedback-icon">✅</div>
+      <div class="guess-feedback-name" id="guess-feedback-name">Correct!</div>
+      <div class="guess-feedback-detail" id="guess-feedback-detail"></div>
+      <div class="guess-card-reveal" id="guess-card-reveal"></div>
+    </div>
+
+    <div class="next-btn-wrap" id="guess-next-wrap" style="display:none;">
+      <button class="btn-next" id="guess-next-btn">Next Footballer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GUESS GAME OVER OVERLAY ══ -->
+<div id="guess-gameover-overlay" class="guess-gameover-overlay">
+  <div class="gameover-content">
+    <div class="gameover-icon">💀</div>
+    <div class="gameover-title">OUT OF LIVES</div>
+    <div class="gameover-sub">The investigation is over.</div>
+    <button class="btn-primary" id="gameover-results-btn" style="max-width:300px;margin-top:8px;">See Results 🏆</button>
+  </div>
+</div>
+
+<!-- ══ GUESS RESULTS SCREEN ══ -->
+<div id="guess-results-screen" class="screen">
+  <div class="guess-results-top">
+    <div class="guess-results-icon">🕵️</div>
+    <h2 class="guess-results-title">Investigation Complete</h2>
+    <div class="guess-results-score-wrap">
+      <div class="guess-results-big-score" id="guess-results-big-score">0</div>
+      <div class="guess-results-score-label" id="guess-results-max-label">/ 40 points</div>
+    </div>
+  </div>
+  <div class="guess-results-grade" id="guess-results-grade">Detective Level: Rookie</div>
+  
+  <!-- New cards unlocked -->
+  <div class="unlocked-cards-section" id="unlocked-cards-section">
+    <div class="unlocked-header">🃏 Cards Unlocked This Round</div>
+    <div class="unlocked-cards-grid" id="unlocked-cards-grid"></div>
+  </div>
+
+  <div class="xp-gained-banner" style="max-width:440px;margin:0 auto 24px;">
+    <div class="xp-gained-left">
+      <div class="xp-gained-label">XP Earned</div>
+      <div class="xp-gained-num" id="guess-results-xp">+0</div>
+    </div>
+    <div class="rank-progress-block">
+      <div class="rank-badge-large">
+        <span class="rank-badge-icon-lg" id="guess-results-rank-icon">🥉</span>
+        <span class="rank-badge-name" id="guess-results-rank-name">Bronze</span>
+      </div>
+    </div>
+  </div>
+  <div class="rank-up-banner" id="guess-rank-up-banner">🎉 RANK UP! Welcome to <span id="guess-rank-up-name"></span>!</div>
+
+  <div class="results-actions" style="margin-top:16px;">
+    <button class="btn-primary" id="guess-retry-btn">Play Again ↺</button>
+    <button class="btn-secondary" id="guess-home-btn">← All Categories</button>
+    <button class="btn-secondary" id="guess-collection-btn" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;">🃏 View Collection</button>
+  </div>
+</div>
+
+<!-- ══ COLLECTABLES SCREEN ══ -->
+<div id="collectables-screen" class="screen">
+  <div class="collectables-header">
+    <button class="quiz-back" id="collectables-back-btn" style="position:absolute;left:20px;">←</button>
+    <h2>🃏 Card Collection</h2>
+    <p id="collection-count-label">0 / 30 Collected</p>
+  </div>
+  <div class="collection-filters" id="collection-filters">
+    <button class="filter-btn active" data-rarity="all">All</button>
+    <button class="filter-btn" data-rarity="bronze">Bronze</button>
+    <button class="filter-btn" data-rarity="silver">Silver</button>
+    <button class="filter-btn" data-rarity="gold">Gold</button>
+    <button class="filter-btn" data-rarity="legend">Legend</button>
+  </div>
+  <div class="collection-grid" id="collection-grid"></div>
 </div>
 
 <!-- ══ LEADERBOARD SCREEN ══ -->
@@ -243,6 +357,13 @@
   </div>
   <div class="leaderboard-table" id="leaderboard-table"></div>
   <button class="btn-secondary leaderboard-back-btn" id="leaderboard-back-btn">← Back to Home</button>
+</div>
+
+<!-- ══ CARD DETAIL MODAL ══ -->
+<div id="card-detail-modal" class="modal-overlay">
+  <div class="card-detail-box" id="card-detail-box">
+    <!-- filled by JS -->
+  </div>
 </div>
 
 <script src="script.js"></script>
