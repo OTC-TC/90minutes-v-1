@@ -91,6 +91,7 @@ const TOTAL_TIME = 90;
 
 // State
 let currentQuiz = null;
+let currentQuizKey = null;
 let currentQ = 0;
 let score = 0;
 let correct = 0;
@@ -127,13 +128,18 @@ function showScreen(id) {
   document.getElementById(screens[id] || id).classList.add('active');
 }
 
+// ── Shuffle ──
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
 // ── Category click ──
 document.querySelectorAll('.category-card').forEach(card => {
   card.addEventListener('click', () => {
-    const key = card.dataset.quiz;
-    currentQuiz = QUIZZES[key];
-    modalIcon.textContent = currentQuiz.icon;
-    modalCatName.textContent = currentQuiz.name;
+    currentQuizKey = card.dataset.quiz;
+    const quiz = QUIZZES[currentQuizKey];
+    modalIcon.textContent = quiz.icon;
+    modalCatName.textContent = quiz.name;
     modal.classList.add('active');
   });
 });
@@ -144,6 +150,7 @@ document.getElementById('modal-cancel-btn').addEventListener('click', () => {
 
 document.getElementById('modal-start-btn').addEventListener('click', () => {
   modal.classList.remove('active');
+  currentQuiz = QUIZZES[currentQuizKey];
   startQuiz();
 });
 
@@ -158,6 +165,8 @@ document.getElementById('quiz-back-btn').addEventListener('click', () => {
 // ── Start Quiz ──
 function startQuiz() {
   reset();
+  // Shuffle a copy so the original data is never mutated
+  currentQuiz = { ...currentQuiz, questions: shuffle(currentQuiz.questions) };
   quizCatLabel.textContent = currentQuiz.name;
   showScreen('quiz');
   renderQuestion();
@@ -361,6 +370,7 @@ function finishQuiz() {
 }
 
 document.getElementById('retry-btn').addEventListener('click', () => {
+  currentQuiz = QUIZZES[currentQuizKey]; // reset to original before reshuffling
   startQuiz();
 });
 
