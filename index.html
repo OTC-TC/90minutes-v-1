@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The 90th Minute — Football Quiz</title>
+<meta name="description" content="Test your football knowledge across the Premier League, La Liga, Champions League and World Cup. 10 questions. 90 seconds. Can you handle the pressure?">
+<meta property="og:title" content="The 90th Minute — Football Quiz">
+<meta property="og:description" content="5 quiz categories. 50 questions. One leaderboard. Are you a football legend?">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0a1628">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
@@ -13,6 +18,17 @@
 
 <!-- ══ HOME SCREEN ══ -->
 <div id="home-screen" class="screen active">
+  <div class="home-top-bar">
+    <div class="player-rank-pill" id="rank-pill-btn">
+      <span class="rank-icon" id="home-rank-icon">🟤</span>
+      <div>
+        <div id="home-rank-name" style="font-size:13px;font-weight:700;">Bronze</div>
+        <div class="rank-xp" id="home-rank-xp">0 XP</div>
+      </div>
+    </div>
+    <button class="leaderboard-btn" id="leaderboard-open-btn">🏆 Leaderboard</button>
+  </div>
+
   <p class="home-eyebrow">⚽ Football Trivia</p>
   <h1 class="home-title">The 90th<span>Minute</span></h1>
   <p class="home-subtitle">Test your football knowledge across 4 competitions. 10 questions. 90 seconds. Can you handle the pressure?</p>
@@ -49,16 +65,55 @@
   <p class="home-footer">10 Questions · 90 Seconds · <span>Infinite Glory</span></p>
 </div>
 
+<!-- ══ NAME ENTRY MODAL ══ -->
+<div id="name-modal" class="modal-overlay">
+  <div class="name-modal-box">
+    <div style="font-size:48px;margin-bottom:16px;">👤</div>
+    <h2>What's Your Name?</h2>
+    <p>Your name will appear on the leaderboard. Choose wisely.</p>
+    <input type="text" class="name-input" id="name-input" maxlength="20" placeholder="Enter your name..." />
+    <button class="btn-primary" id="name-confirm-btn">Let's Go ⚡</button>
+  </div>
+</div>
+
+<!-- ══ RANK INFO MODAL ══ -->
+<div id="rank-info-modal" class="modal-overlay">
+  <div class="rank-info-box">
+    <h2>🎖 Rank System</h2>
+    <p class="rank-info-subtitle">Earn XP to climb the ranks</p>
+    <div class="your-xp-display">
+      <div class="big-xp" id="rank-info-xp">0</div>
+      <div class="xp-label">Total XP</div>
+    </div>
+    <div class="rank-tiers-list" id="rank-tiers-list"></div>
+    <button class="btn-secondary" id="rank-info-close-btn" style="width:100%;">← Back</button>
+  </div>
+</div>
+
 <!-- ══ MODAL ══ -->
 <div id="modal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-icon" id="modal-icon">⚽</div>
     <h2 class="modal-title">Ready?</h2>
     <p class="modal-category-name" id="modal-cat-name">PREMIER LEAGUE</p>
+    <div class="modal-xp-preview">
+      <div class="xp-item">
+        <div class="xp-item-val">+10</div>
+        <div class="xp-item-label">Per Answer</div>
+      </div>
+      <div class="xp-item">
+        <div class="xp-item-val">+5</div>
+        <div class="xp-item-label">Streak Bonus</div>
+      </div>
+      <div class="xp-item">
+        <div class="xp-item-val">+20</div>
+        <div class="xp-item-label">Perfect Score</div>
+      </div>
+    </div>
     <ul class="rules-list">
       <li><div class="rule-num">1</div>10 questions — easy to impossible difficulty</li>
       <li><div class="rule-num">2</div>90 seconds total — the clock never stops</li>
-      <li><div class="rule-num">3</div>Each correct answer = 1 point. No partial credit</li>
+      <li><div class="rule-num">3</div>Each correct answer = 1 point + 10 XP. No partial credit</li>
     </ul>
     <button class="btn-primary" id="modal-start-btn">Kick Off ⚡</button>
     <br><br>
@@ -69,11 +124,12 @@
 <!-- ══ QUIZ SCREEN ══ -->
 <div id="quiz-screen" class="screen">
   <div class="quiz-header">
-    <div class="quiz-back" id="quiz-back-btn">←</div>
+    <div class="quiz-back" id="quiz-back-btn" role="button" aria-label="Back to categories">←</div>
     <div class="quiz-meta">
       <div class="quiz-category-label" id="quiz-cat-label">PREMIER LEAGUE</div>
       <div class="quiz-progress-text" id="quiz-progress-text">Question 1 of 10</div>
     </div>
+    <div class="streak-badge" id="streak-badge">🔥 <span id="streak-count">0</span>x</div>
     <div class="score-badge">
       <span class="score-badge-icon">⚡</span>
       <span id="score-display">0</span>
@@ -99,6 +155,7 @@
     <div class="feedback-box" id="feedback-box">
       <div class="feedback-label" id="feedback-label">Correct!</div>
       <div id="feedback-text"></div>
+      <div id="xp-earned-display"></div>
     </div>
     <div class="next-btn-wrap" id="next-wrap">
       <button class="btn-next" id="next-btn">Next →</button>
@@ -131,6 +188,28 @@
   <p class="results-quote" id="results-quote">"Decent. Not special... yet."</p>
   <p class="results-attribution" id="results-attr">— Jose Mourinho</p>
 
+  <!-- XP & Rank Section -->
+  <div class="results-xp-section">
+    <div class="xp-gained-banner">
+      <div class="xp-gained-left">
+        <div class="xp-gained-label">XP Earned</div>
+        <div class="xp-gained-num" id="results-xp-gained">+0</div>
+        <div class="xp-gained-breakdown" id="results-xp-breakdown">0 correct × 10 + 0 bonus</div>
+      </div>
+      <div class="rank-progress-block">
+        <div class="rank-badge-large">
+          <span class="rank-badge-icon-lg" id="results-rank-icon">🟤</span>
+          <span class="rank-badge-name" id="results-rank-name">Bronze</span>
+        </div>
+        <div class="rank-progress-bar-wrap">
+          <div class="rank-progress-bar-fill" id="results-rank-bar" style="width:0%;background:var(--rank-bronze)"></div>
+        </div>
+        <div class="rank-progress-label" id="results-rank-progress-label">0 / 100 XP</div>
+      </div>
+    </div>
+    <div class="rank-up-banner" id="rank-up-banner">🎉 RANK UP! Welcome to <span id="rank-up-name"></span>!</div>
+  </div>
+
   <div class="results-stats">
     <div class="stat-pill">
       <div class="stat-num" id="stat-correct">0</div>
@@ -144,6 +223,10 @@
       <div class="stat-num" id="stat-pct">0%</div>
       <div class="stat-label">Accuracy</div>
     </div>
+    <div class="stat-pill">
+      <div class="stat-num" id="stat-total-xp">0</div>
+      <div class="stat-label">Total XP</div>
+    </div>
   </div>
 
   <div class="results-actions">
@@ -151,7 +234,17 @@
     <button class="btn-secondary" id="home-btn">← All Categories</button>
   </div>
 </div>
-<script src="script.js"></script>
 
+<!-- ══ LEADERBOARD SCREEN ══ -->
+<div id="leaderboard-screen" class="screen">
+  <div class="leaderboard-header">
+    <h2>🏆 Leaderboard</h2>
+    <p>Top players by total XP earned</p>
+  </div>
+  <div class="leaderboard-table" id="leaderboard-table"></div>
+  <button class="btn-secondary leaderboard-back-btn" id="leaderboard-back-btn">← Back to Home</button>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
