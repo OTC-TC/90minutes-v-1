@@ -44,7 +44,7 @@ const QUIZZES = {
       { q: "Which player has the most Champions League assists in history?", opts: ["Cristiano Ronaldo","Lionel Messi","Angel Di Maria","Kevin De Bruyne"], ans: 1, diff: 'medium', fact: "Lionel Messi leads with 42 Champions League assists." },
       { q: "Which goalkeeper holds the record for most clean sheets in UCL history?", opts: ["Iker Casillas","Gianluigi Buffon","Petr Čech","Manuel Neuer"], ans: 0, diff: 'medium', fact: "Iker Casillas kept 57 clean sheets in the Champions League." },
       { q: "Which team has the longest unbeaten home record in UCL history?", opts: ["Bayern Munich","Barcelona","Real Madrid","Manchester United"], ans: 0, diff: 'hard', fact: "Bayern Munich went 43 consecutive home games unbeaten in the Champions League." },
-      { q: "Who scored the fastest goal in Champions League history?", opts: ["Roy Makaay","Paolo Maldini","Clarence Seedorf","Alessandro Del Piero"], ans: 1, diff: 'hard', fact: "Paolo Maldini scored after just 50 seconds in the 2005 final between AC Milan and Liverpool." },
+      { q: "Who scored the fastest goal in Champions League history?", opts: ["Roy Makaay","Paolo Maldini","Clarence Seedorf","Alessandro Del Piero"], ans: 0, diff: 'hard', fact: "Roy Makaay scored for Bayern Munich against Real Madrid in just 10.12 seconds in 2007 — the fastest ever UCL goal." },
       { q: "Which player has won the most Champions League titles?", opts: ["Francisco Gento","Cristiano Ronaldo","Paolo Maldini","Lionel Messi"], ans: 0, diff: 'hard', fact: "Francisco Gento won 6 European Cups with Real Madrid between 1956 and 1966." },
       { q: "Which team achieved the biggest aggregate win in UCL history?", opts: ["Liverpool","Real Madrid","Bayern Munich","Barcelona"], ans: 2, diff: 'impossible', fact: "Bayern Munich beat Sporting CP 12–1 on aggregate in the 2008–09 round of 16." },
       { q: "Who is the youngest goalscorer in Champions League history?", opts: ["Ansu Fati","Peter Ofori-Quaye","Bojan Krkić","Youssoufa Moukoko"], ans: 1, diff: 'impossible', fact: "Peter Ofori-Quaye scored for Rosenborg in 1996 at just 17 years and 195 days old." }
@@ -73,7 +73,7 @@ const QUIZZES = {
       { q: "Which player scored the most goals in a single Premier League season?", opts: ["Mohamed Salah","Alan Shearer","Erling Haaland","Cristiano Ronaldo"], ans: 2, diff: 'easy', fact: "Erling Haaland broke the record with 36 Premier League goals in the 2022–23 season." },
       { q: "Who was the first player to score 100 Champions League goals?", opts: ["Lionel Messi","Raul","Cristiano Ronaldo","Karim Benzema"], ans: 1, diff: 'easy', fact: "Raúl González was the first to reach 100 UCL goals, a record later shattered by Ronaldo and Messi." },
       { q: "Which country won the first ever World Cup?", opts: ["Brazil","Argentina","Uruguay","Italy"], ans: 2, diff: 'medium', fact: "Uruguay defeated Argentina 4–2 in the 1930 final on home soil in Montevideo." },
-      { q: "Who is the only player to win the Ballon d'Or, World Cup, and UCL in the same calendar year?", opts: ["Lionel Messi","Zinedine Zidane","Kaka","Fabio Cannavaro"], ans: 3, diff: 'medium', fact: "No player has ever won all three in the same year — it's one of football's ultimate unclaimed feats." },
+      { q: "Who is the only defender ever to win the FIFA World Player of the Year award?", opts: ["Lionel Messi","Zinedine Zidane","Kaká","Fabio Cannavaro"], ans: 3, diff: 'medium', fact: "Fabio Cannavaro won the 2006 FIFA World Player of the Year award after captaining Italy to World Cup glory — the only outfield defender to ever win it." },
       { q: "Which team has completed the continental treble the most times?", opts: ["Barcelona","Bayern Munich","Manchester United","Inter Milan"], ans: 0, diff: 'medium', fact: "Barcelona won the treble in 2008–09 and 2014–15 under Pep Guardiola and Luis Enrique." },
       { q: "Who was the first African player to win the Ballon d'Or?", opts: ["George Weah","Samuel Eto'o","Didier Drogba","Yaya Touré"], ans: 0, diff: 'hard', fact: "George Weah won the Ballon d'Or in 1995 with AC Milan — a historic first for African football." },
       { q: "Which player has scored the most goals in El Clásico history?", opts: ["Cristiano Ronaldo","Alfredo Di Stéfano","Lionel Messi","Raúl"], ans: 2, diff: 'hard', fact: "Lionel Messi scored 26 El Clásico goals across his Barcelona career." },
@@ -180,6 +180,7 @@ function reset() {
   timerCount.textContent = TOTAL_TIME;
   feedbackBox.className = 'feedback-box';
   nextWrap.className = 'next-btn-wrap';
+  nextBtn.textContent = 'Next →';
 }
 
 function renderQuestion(animate = false) {
@@ -224,6 +225,7 @@ function _fillQuestion(q) {
   // Reset feedback
   feedbackBox.className = 'feedback-box';
   nextWrap.className = 'next-btn-wrap';
+  nextBtn.textContent = 'Next →';
 }
 
 function selectAnswer(idx, q) {
