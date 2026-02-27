@@ -2,10 +2,10 @@
 // RANK SYSTEM
 // ════════════════════════════════════════════
 const RANKS = [
-  { name:'Bronze',   icon:'🥉', color:'#cd7f32', minXP:0,    maxXP:199 },
-  { name:'Silver',   icon:'🥈', color:'#b8c0cc', minXP:200,  maxXP:599 },
-  { name:'Gold',     icon:'🥇', color:'#ffc400', minXP:600,  maxXP:1199 },
-  { name:'Platinum', icon:'💎', color:'#7dd3fc', minXP:1200, maxXP:2199 },
+  { name:'Bronze',   icon:'🥉', color:'#cd7f32', minXP:0,    maxXP:599 },
+  { name:'Silver',   icon:'🥈', color:'#b8c0cc', minXP:600,  maxXP:999 },
+  { name:'Gold',     icon:'🥇', color:'#ffc400', minXP:1000,  maxXP:1599 },
+  { name:'Platinum', icon:'💎', color:'#7dd3fc', minXP:1600, maxXP:2199 },
   { name:'Diamond',  icon:'💠', color:'#a5f3fc', minXP:2200, maxXP:3999 },
   { name:'Legend',   icon:'👑', color:'#ff6b6b', minXP:4000, maxXP:Infinity }
 ];
@@ -196,59 +196,209 @@ FOOTBALLER_CARDS.forEach(card => {
   card.correctIndex = card.options.indexOf(correctAnswer);
 });
 // ════════════════════════════════════════════
-// 50 RANKED QUESTIONS
 // ════════════════════════════════════════════
+// RANKED POOL — DIFFICULTY TIERED BY RANK
+// Bronze=easy, Silver=medium, Gold=hard,
+// Platinum=very_hard, Diamond=impossible, Legend=legend
+// ════════════════════════════════════════════
+
 const RANKED_POOL = [
-  {q:"Who is the Premier League's all-time top goal scorer?",opts:["Wayne Rooney","Thierry Henry","Alan Shearer","Sergio Agüero"],ans:2,diff:'easy',fact:"Alan Shearer scored 260 goals, mainly for Blackburn and Newcastle."},
-  {q:"Which club has won the most UEFA Champions League titles?",opts:["AC Milan","Liverpool","Real Madrid","Bayern Munich"],ans:2,diff:'easy',fact:"Real Madrid have won the Champions League a record 15 times."},
-  {q:"Who is the all-time top scorer in World Cup history?",opts:["Ronaldo Nazário","Miroslav Klose","Gerd Müller","Pelé"],ans:1,diff:'easy',fact:"Miroslav Klose scored 16 World Cup goals across four tournaments."},
+
+  // ─── EASY (Bronze rank questions) ────────────────────────────────────────
+
   {q:"Which country has won the most FIFA World Cup titles?",opts:["Germany","Italy","Brazil","Argentina"],ans:2,diff:'easy',fact:"Brazil have won five World Cups: 1958, 1962, 1970, 1994, 2002."},
   {q:"Who holds the record for most Ballon d'Or wins?",opts:["Cristiano Ronaldo","Zinedine Zidane","Lionel Messi","Ronaldo Nazário"],ans:2,diff:'easy',fact:"Lionel Messi has won the Ballon d'Or a record 8 times."},
   {q:"Which team went an entire Premier League season unbeaten?",opts:["Chelsea","Manchester United","Arsenal","Liverpool"],ans:2,diff:'easy',fact:"Arsenal's 'Invincibles' went 38 games unbeaten in 2003-04."},
   {q:"Who scored a famous 'Hand of God' goal at the 1986 World Cup?",opts:["Ronaldo","Zidane","Maradona","Pelé"],ans:2,diff:'easy',fact:"Maradona punched the ball into England's net in the 1986 quarter-final."},
   {q:"Which country won the 2022 FIFA World Cup?",opts:["France","Brazil","Argentina","Croatia"],ans:2,diff:'easy',fact:"Argentina beat France on penalties after a thrilling 3-3 draw."},
+  {q:"Who is the Premier League's all-time top goal scorer?",opts:["Wayne Rooney","Thierry Henry","Alan Shearer","Sergio Agüero"],ans:2,diff:'easy',fact:"Alan Shearer scored 260 Premier League goals, mainly for Blackburn and Newcastle."},
+  {q:"Which club has won the most UEFA Champions League titles?",opts:["AC Milan","Liverpool","Real Madrid","Bayern Munich"],ans:2,diff:'easy',fact:"Real Madrid have won the Champions League a record 15 times."},
+  {q:"Who is the all-time top scorer in World Cup history?",opts:["Ronaldo Nazário","Miroslav Klose","Gerd Müller","Pelé"],ans:1,diff:'easy',fact:"Miroslav Klose scored 16 World Cup goals across four tournaments."},
+  {q:"Which La Liga club has the nickname 'Los Blancos'?",opts:["Atlético Madrid","Sevilla","Valencia","Real Madrid"],ans:3,diff:'easy',fact:"Real Madrid are known as 'Los Blancos' (The Whites) for their iconic all-white kit."},
+  {q:"What country does Cristiano Ronaldo play for internationally?",opts:["Spain","Brazil","Portugal","France"],ans:2,diff:'easy',fact:"Ronaldo has represented Portugal internationally since 2003."},
+  {q:"In which city is the famous Camp Nou stadium?",opts:["Madrid","Valencia","Seville","Barcelona"],ans:3,diff:'easy',fact:"Camp Nou is Barcelona's iconic home stadium, opened in 1957."},
+  {q:"Which club did Lionel Messi spend most of his career at?",opts:["PSG","Inter Miami","Real Madrid","Barcelona"],ans:3,diff:'easy',fact:"Messi spent 17 years at FC Barcelona from age 13 before leaving in 2021."},
+  {q:"How often is the FIFA World Cup held?",opts:["Every 2 years","Every 3 years","Every 4 years","Every 5 years"],ans:2,diff:'easy',fact:"The FIFA World Cup is held every four years, with the next edition in 2026."},
+  {q:"Which nation won the 2018 FIFA World Cup?",opts:["Croatia","Belgium","England","France"],ans:3,diff:'easy',fact:"France beat Croatia 4-2 in the 2018 World Cup final in Moscow."},
+  {q:"Who is known as 'The Special One'?",opts:["Pep Guardiola","Jürgen Klopp","Carlo Ancelotti","José Mourinho"],ans:3,diff:'easy',fact:"Mourinho gave himself the nickname at his first Chelsea press conference in 2004."},
+  {q:"Which country does Erling Haaland represent internationally?",opts:["Denmark","Sweden","Norway","Finland"],ans:2,diff:'easy',fact:"Despite being born in Leeds, Haaland chose to represent Norway."},
+  {q:"What colour are Barcelona's home shirts?",opts:["All red","Red and blue stripes","Blue and white","Green and white"],ans:1,diff:'easy',fact:"Barcelona's iconic blaugrana (blue and red stripes) kit has remained largely unchanged since 1910."},
+  {q:"Which club does Kylian Mbappé currently play for?",opts:["PSG","Bayern Munich","Manchester City","Real Madrid"],ans:3,diff:'easy',fact:"Mbappé joined Real Madrid on a free transfer in the summer of 2024."},
+  {q:"How many players are on a football pitch per side?",opts:["9","10","11","12"],ans:2,diff:'easy',fact:"Each team fields 11 players — 10 outfield players plus a goalkeeper."},
+  {q:"Who won the 2023-24 Premier League title?",opts:["Arsenal","Liverpool","Chelsea","Manchester City"],ans:3,diff:'easy',fact:"Manchester City won their fourth consecutive Premier League title in 2023-24."},
+
+  // ─── MEDIUM (Silver rank questions) ──────────────────────────────────────
+
   {q:"Who managed Arsenal's 'Invincibles' in 2003-04?",opts:["Arsène Wenger","Unai Emery","Mikel Arteta","George Graham"],ans:0,diff:'medium',fact:"Wenger led Arsenal to a 38-game unbeaten season — a record that still stands."},
   {q:"Who is the all-time top scorer in Champions League history?",opts:["Lionel Messi","Robert Lewandowski","Cristiano Ronaldo","Karim Benzema"],ans:2,diff:'medium',fact:"Cristiano Ronaldo holds the record with 140 Champions League goals."},
-  {q:"Which player has the most Champions League assists?",opts:["Cristiano Ronaldo","Lionel Messi","Angel Di Maria","Kevin De Bruyne"],ans:1,diff:'medium',fact:"Lionel Messi leads with 42 Champions League assists."},
-  {q:"What is La Liga's all-time top scorer record?",opts:["Cristiano Ronaldo — 450","Lionel Messi — 474","Raúl — 228","Hugo Sánchez — 234"],ans:1,diff:'medium',fact:"Lionel Messi scored 474 La Liga goals across his career at Barcelona."},
   {q:"Who won the Golden Boot at the 2018 World Cup?",opts:["Cristiano Ronaldo","Harry Kane","Kylian Mbappé","Romelu Lukaku"],ans:1,diff:'medium',fact:"Harry Kane scored 6 goals to win the Golden Boot at Russia 2018."},
-  {q:"Which goalkeeper has the most clean sheets in Premier League history?",opts:["David De Gea","Petr Čech","Edwin van der Sar","Peter Schmeichel"],ans:1,diff:'medium',fact:"Petr Čech holds the record with 202 clean sheets across his PL career."},
   {q:"Which player is known as 'El Niño' in Spanish football?",opts:["Fernando Torres","David Villa","Iker Casillas","Andrés Iniesta"],ans:0,diff:'medium',fact:"Fernando Torres earned the nickname 'The Kid' at Atlético Madrid."},
   {q:"In what year was the Premier League founded?",opts:["1988","1990","1992","1995"],ans:2,diff:'medium',fact:"The Premier League was founded on 20 February 1992."},
+  {q:"What year did Germany win their fourth World Cup title?",opts:["2002","2006","2010","2014"],ans:3,diff:'medium',fact:"Germany won the 2014 World Cup in Brazil, defeating the hosts 7–1 in the semi-final."},
+  {q:"Who scored the most goals in a single Premier League season?",opts:["Mohamed Salah","Alan Shearer","Erling Haaland","Cristiano Ronaldo"],ans:2,diff:'medium',fact:"Erling Haaland broke the record with 36 Premier League goals in 2022-23."},
+  {q:"Who is the only defender to win FIFA World Player of the Year?",opts:["Lionel Messi","Zinedine Zidane","Kaká","Fabio Cannavaro"],ans:3,diff:'medium',fact:"Fabio Cannavaro won the 2006 FIFA World Player of the Year after captaining Italy to glory."},
+  {q:"Who scored the winning goal in the 1999 Champions League final?",opts:["Andy Cole","Ole Gunnar Solskjær","Teddy Sheringham","Dwight Yorke"],ans:1,diff:'medium',fact:"Ole Gunnar Solskjær scored the dramatic injury-time winner for Manchester United."},
+  {q:"Which club has won the most Premier League titles?",opts:["Liverpool","Chelsea","Arsenal","Manchester United"],ans:3,diff:'medium',fact:"Manchester United have won 20 league titles, 13 under Sir Alex Ferguson."},
+  {q:"Which Brazilian club did Neymar come through before joining Barcelona?",opts:["Flamengo","Corinthians","Santos","Grêmio"],ans:2,diff:'medium',fact:"Neymar rose through the Santos academy before his €88m move to Barcelona."},
+  {q:"Which country hosted the 2002 FIFA World Cup alongside Japan?",opts:["China","South Korea","Australia","Malaysia"],ans:1,diff:'medium',fact:"South Korea and Japan co-hosted the 2002 World Cup — the first held in Asia."},
+  {q:"Who is the all-time top scorer in Bundesliga history?",opts:["Gerd Müller","Karl-Heinz Rummenigge","Robert Lewandowski","Oliver Kahn"],ans:2,diff:'medium',fact:"Robert Lewandowski scored 312 Bundesliga goals, surpassing Gerd Müller's long-standing record."},
+  {q:"Which nation won Euro 2020 (played in 2021)?",opts:["England","France","Italy","Spain"],ans:2,diff:'medium',fact:"Italy beat England on penalties at Wembley to win their second European Championship."},
+  {q:"Which goalkeeper holds the record for most clean sheets in PL history?",opts:["David De Gea","Petr Čech","Edwin van der Sar","Peter Schmeichel"],ans:1,diff:'medium',fact:"Petr Čech holds the record with 202 clean sheets across his Premier League career."},
+  {q:"Who was the first player to win the PL with three different clubs?",opts:["Nicolas Anelka","Ashley Cole","Robert Pires","Marc Overmars"],ans:0,diff:'medium',fact:"Nicolas Anelka won the title with Arsenal (1998), Chelsea (2010) and Man City (2012)."},
+  {q:"Which club did Zinedine Zidane win La Liga with as a manager?",opts:["France","Juventus","Real Madrid","Marseille"],ans:2,diff:'medium',fact:"Zidane won La Liga twice as Real Madrid manager (2017 and 2020)."},
+  {q:"How many goals did Ronaldo score in his debut Real Madrid season?",opts:["26","30","33","36"],ans:2,diff:'medium',fact:"Cristiano Ronaldo scored 33 goals in all competitions in his debut 2009-10 season at Real Madrid."},
+  {q:"Which club did Steven Gerrard spend his entire English career at?",opts:["Everton","Manchester City","Liverpool","Chelsea"],ans:2,diff:'medium',fact:"Gerrard was a one-club man at Liverpool from 1998 to 2015 in English football."},
+  {q:"Who holds the record for most goals in a single La Liga season?",opts:["Cristiano Ronaldo","Lionel Messi","Telmo Zarra","Hugo Sánchez"],ans:1,diff:'medium',fact:"Lionel Messi scored 50 La Liga goals in the 2011-12 season — a record that still stands."},
+
+  // ─── HARD (Gold rank questions) ──────────────────────────────────────────
+
   {q:"Who scored the first ever Premier League goal?",opts:["Teddy Sheringham","Brian Deane","Mark Hughes","Eric Cantona"],ans:1,diff:'hard',fact:"Brian Deane scored for Sheffield United against Manchester United on 15 August 1992."},
   {q:"Which player has appeared in the most World Cup tournaments?",opts:["Diego Maradona","Lothar Matthäus","Paolo Maldini","Cafu"],ans:1,diff:'hard',fact:"Lothar Matthäus appeared in five World Cups between 1982 and 1998."},
-  {q:"Who holds the record for most goals in a single World Cup match?",opts:["Gerd Müller","Oleg Salenko","Eusébio","Gary Lineker"],ans:1,diff:'hard',fact:"Oleg Salenko scored 5 goals against Cameroon for Russia at the 1994 World Cup."},
   {q:"Who is the only goalkeeper to win the Ballon d'Or?",opts:["Gordon Banks","Gianluigi Buffon","Lev Yashin","Peter Shilton"],ans:2,diff:'hard',fact:"Lev Yashin won the 1963 Ballon d'Or — the only goalkeeper ever to do so."},
-  {q:"Which club has never been relegated from La Liga?",opts:["Barcelona","Real Madrid","Athletic Bilbao","Sevilla"],ans:2,diff:'hard',fact:"Athletic Bilbao have played every season in La Liga since its founding in 1929."},
   {q:"Who scored the fastest goal in Champions League history?",opts:["Roy Makaay","Paolo Maldini","Clarence Seedorf","Alessandro Del Piero"],ans:0,diff:'hard',fact:"Roy Makaay scored for Bayern vs Real Madrid in just 10.12 seconds in 2007."},
-  {q:"Who won the Pichichi Trophy the most times?",opts:["Telmo Zarra","Ronaldo Nazário","Lionel Messi","Cristiano Ronaldo"],ans:2,diff:'hard',fact:"Lionel Messi won La Liga's top scorer award (Pichichi) a record 8 times."},
-  {q:"Which player appeared in the most Champions League finals?",opts:["Francisco Gento","Cristiano Ronaldo","Paolo Maldini","Lionel Messi"],ans:0,diff:'impossible',fact:"Francisco Gento won 6 European Cups with Real Madrid between 1956 and 1966."},
-  {q:"Who holds the record for most goals in a single La Liga season?",opts:["Cristiano Ronaldo","Lionel Messi — 50","Telmo Zarra","Hugo Sánchez"],ans:1,diff:'impossible',fact:"Lionel Messi scored 50 La Liga goals in the 2011-12 season."},
-  {q:"Who is the youngest player to score in El Clásico?",opts:["Lamine Yamal","Raúl","Vinícius Júnior","Bojan Krkić"],ans:0,diff:'impossible',fact:"Lamine Yamal scored for Barcelona against Real Madrid at just 17 years old."},
-  {q:"Which English club won the Champions League despite finishing 5th in their league?",opts:["Chelsea","Liverpool 2004-05","Manchester United","Nottingham Forest"],ans:1,diff:'impossible',fact:"Liverpool qualified as defending champions in 2004-05 and won it in Istanbul."},
-  {q:"Who is the only player to win three World Cup tournaments?",opts:["Cafu","Franz Beckenbauer","Pelé","Ronaldo"],ans:2,diff:'impossible',fact:"Pelé is the only player to win the World Cup three times (1958, 1962, 1970)."},
-  {q:"What year did Germany win their fourth World Cup title?",opts:["2002","2006","2010","2014"],ans:3,diff:'medium',fact:"Germany won the 2014 World Cup in Brazil, defeating the hosts 7–1 in the semi-final."},
   {q:"Who was the first African player to win the Ballon d'Or?",opts:["George Weah","Samuel Eto'o","Didier Drogba","Yaya Touré"],ans:0,diff:'hard',fact:"George Weah won the Ballon d'Or in 1995 — a historic first for African football."},
-  {q:"Which player has won the most trophies in football history?",opts:["Lionel Messi","Dani Alves — 43","Cristiano Ronaldo","Sergio Ramos"],ans:1,diff:'impossible',fact:"Dani Alves won 43 major trophies across his career — the most by any footballer."},
   {q:"Who scored the winning penalty in the 2006 World Cup final for Italy?",opts:["Alessandro Del Piero","Fabio Grosso","Francesco Totti","Luca Toni"],ans:1,diff:'hard',fact:"Fabio Grosso scored the decisive fifth penalty to win the World Cup for Italy."},
   {q:"Which nation won the inaugural UEFA European Championship in 1960?",opts:["West Germany","Czechoslovakia","Spain","Soviet Union"],ans:3,diff:'hard',fact:"The Soviet Union won the first UEFA European Championship, defeating Yugoslavia 2–1."},
-  {q:"Who is the youngest player to play in a World Cup final?",opts:["Pelé","Kylian Mbappé","Lionel Messi","Neymar"],ans:0,diff:'hard',fact:"Pelé played in the 1958 World Cup final for Brazil at just 17 years old."},
-  {q:"Which manager has won the most Champions League titles?",opts:["Alex Ferguson","Carlo Ancelotti — 4","Pep Guardiola","Zinedine Zidane"],ans:1,diff:'impossible',fact:"Carlo Ancelotti has won the Champions League four times: 2003, 2007, 2014, 2022."},
-  {q:"Who scored the most goals in a single Premier League season?",opts:["Mohamed Salah","Alan Shearer","Erling Haaland — 36","Cristiano Ronaldo"],ans:2,diff:'medium',fact:"Erling Haaland broke the record with 36 Premier League goals in 2022-23."},
-  {q:"How many teams participated in the first-ever FIFA World Cup in 1930?",opts:["13","16","24","32"],ans:0,diff:'medium',fact:"Only 13 nations participated in the 1930 World Cup in Uruguay."},
-  {q:"Who holds the record for most goals in a single World Cup tournament?",opts:["Eusébio","Just Fontaine — 13","Gerd Müller","Sandor Kocsis"],ans:1,diff:'hard',fact:"Just Fontaine scored 13 goals for France at the 1958 World Cup."},
-  {q:"What year did football first appear in the Olympic Games?",opts:["1896","1900","1904","1908"],ans:1,diff:'impossible',fact:"Football made its Olympic debut at the 1900 Paris Games."},
-  {q:"Who is the only defender to win FIFA World Player of the Year?",opts:["Lionel Messi","Zinedine Zidane","Kaká","Fabio Cannavaro"],ans:3,diff:'medium',fact:"Fabio Cannavaro won the 2006 FIFA World Player of the Year after captaining Italy to glory."},
-  {q:"Which team completed the first treble in men's football?",opts:["Celtic 1967","Ajax","Barcelona","Manchester United"],ans:0,diff:'hard',fact:"Celtic's 'Lisbon Lions' won every competition they entered in 1966-67."},
-  {q:"Who is the youngest goalscorer in Champions League history?",opts:["Ansu Fati","Peter Ofori-Quaye","Bojan Krkić","Youssoufa Moukoko"],ans:1,diff:'impossible',fact:"Peter Ofori-Quaye scored for Rosenborg in 1996 at just 17 years and 195 days old."},
-  {q:"Which La Liga club has the nickname 'Los Blancos'?",opts:["Atlético Madrid","Sevilla","Valencia","Real Madrid"],ans:3,diff:'easy',fact:"Real Madrid are known as 'Los Blancos' (The Whites) for their iconic all-white kit."},
-  {q:"Who scored the winning goal in the 1999 Champions League final?",opts:["Andy Cole","Ole Gunnar Solskjær","Teddy Sheringham","Dwight Yorke"],ans:1,diff:'medium',fact:"Ole Gunnar Solskjær scored the dramatic injury-time winner for Manchester United."},
-  {q:"What is the record winning margin in a World Cup match?",opts:["9–0","10–1","13–0","14–0"],ans:1,diff:'impossible',fact:"Hungary defeated El Salvador 10–1 in the 1982 World Cup group stage."},
+  {q:"Who is the youngest player to score in a World Cup final?",opts:["Pelé","Kylian Mbappé","Lionel Messi","Neymar"],ans:0,diff:'hard',fact:"Pelé scored in the 1958 World Cup final for Brazil at just 17 years old."},
+  {q:"Who holds the record for most goals in a single World Cup tournament?",opts:["Eusébio","Just Fontaine","Gerd Müller","Sandor Kocsis"],ans:1,diff:'hard',fact:"Just Fontaine scored 13 goals for France at the 1958 World Cup."},
   {q:"Which goalkeeper played the most World Cup matches?",opts:["Gianluigi Buffon","Dino Zoff","Sepp Maier","Essam El-Hadary"],ans:0,diff:'hard',fact:"Gianluigi Buffon appeared in 17 World Cup matches across his Italy career."},
-  {q:"Who became the first player to score 100 Champions League goals?",opts:["Lionel Messi","Raúl","Cristiano Ronaldo","Karim Benzema"],ans:1,diff:'hard',fact:"Raúl González was the first to reach 100 UCL goals, later shattered by Ronaldo and Messi."},
-  {q:"Who won the all-time Premier League assist record?",opts:["Frank Lampard","Ryan Giggs — 162","Cesc Fàbregas","Kevin De Bruyne"],ans:1,diff:'hard',fact:"Ryan Giggs leads with 162 Premier League assists, all for Manchester United."},
-  {q:"Who scored the fastest hat-trick in Premier League history?",opts:["Michael Owen","Robbie Fowler","Sadio Mané — 4m33s","Harry Kane"],ans:2,diff:'hard',fact:"Sadio Mané scored a hat-trick in 4 mins 33 secs for Southampton vs Aston Villa in 2015."},
+  {q:"Who won the all-time Premier League assist record?",opts:["Frank Lampard","Ryan Giggs","Cesc Fàbregas","Kevin De Bruyne"],ans:1,diff:'hard',fact:"Ryan Giggs leads with 162 Premier League assists, all for Manchester United."},
+  {q:"Who scored the fastest hat-trick in Premier League history?",opts:["Michael Owen","Robbie Fowler","Sadio Mané","Harry Kane"],ans:2,diff:'hard',fact:"Sadio Mané scored a hat-trick in 4 mins 33 secs for Southampton vs Aston Villa in 2015."},
+  {q:"Which Italian club did Cristiano Ronaldo play for 2018–2021?",opts:["AC Milan","Inter Milan","Napoli","Juventus"],ans:3,diff:'hard',fact:"Ronaldo joined Juventus in 2018 for €100m, winning two Serie A titles before leaving."},
+  {q:"Who holds the record for most appearances in the Premier League?",opts:["Ryan Giggs","Gareth Barry","David James","Wayne Rooney"],ans:1,diff:'hard',fact:"Gareth Barry made 653 Premier League appearances across his career."},
+  {q:"In which year did Pelé score his 1,000th career goal?",opts:["1967","1968","1969","1970"],ans:2,diff:'hard',fact:"Pelé scored his 1,000th career goal from the penalty spot against Vasco da Gama on 19 November 1969."},
+  {q:"Which English club did Eric Cantona play for before Manchester United?",opts:["Chelsea","Aston Villa","Sheffield Wednesday","Leeds United"],ans:3,diff:'hard',fact:"Cantona played for Leeds United before his controversial £1.2m move to Man United in 1992."},
+  {q:"Who was sent off in the 2006 World Cup final?",opts:["Materazzi","Zidane","Malouda","Cannavaro"],ans:1,diff:'hard',fact:"Zinedine Zidane was sent off for headbutting Marco Materazzi — his last act in professional football."},
+  {q:"Which club has never been relegated from La Liga?",opts:["Barcelona","Real Madrid","Athletic Bilbao","Sevilla"],ans:2,diff:'hard',fact:"Athletic Bilbao have played every season in La Liga since its founding in 1929."},
+  {q:"Which club completed the first treble in men's football?",opts:["Celtic 1967","Ajax 1972","Barcelona 2009","Manchester United 1999"],ans:0,diff:'hard',fact:"Celtic's 'Lisbon Lions' won every competition they entered in 1966-67."},
+  {q:"How many La Liga titles did Ronaldo win with Real Madrid?",opts:["1","2","3","4"],ans:1,diff:'hard',fact:"Ronaldo won La Liga twice with Real Madrid in 2012 and 2017."},
+
+  // ─── VERY HARD (Platinum rank questions) ─────────────────────────────────
+
+  {q:"Who holds the record for most goals in a single World Cup match?",opts:["Gerd Müller","Oleg Salenko","Eusébio","Gary Lineker"],ans:1,diff:'very_hard',fact:"Oleg Salenko scored 5 goals against Cameroon for Russia at the 1994 World Cup."},
+  {q:"Which player appeared in the most Champions League finals?",opts:["Francisco Gento","Cristiano Ronaldo","Paolo Maldini","Lionel Messi"],ans:0,diff:'very_hard',fact:"Francisco Gento won 6 European Cups with Real Madrid between 1956 and 1966."},
+  {q:"What is the record winning margin in a World Cup match?",opts:["9–0","10–1","13–0","14–0"],ans:1,diff:'very_hard',fact:"Hungary defeated El Salvador 10–1 in the 1982 World Cup group stage."},
+  {q:"Who is the youngest goalscorer in Champions League history?",opts:["Ansu Fati","Peter Ofori-Quaye","Bojan Krkić","Youssoufa Moukoko"],ans:1,diff:'very_hard',fact:"Peter Ofori-Quaye scored for Rosenborg in 1996 at just 17 years and 195 days old."},
+  {q:"Which player has won the most trophies in football history?",opts:["Lionel Messi","Dani Alves","Cristiano Ronaldo","Sergio Ramos"],ans:1,diff:'very_hard',fact:"Dani Alves won 43 major trophies across his career — the most by any footballer."},
+  {q:"Who is the only player to win three World Cup tournaments?",opts:["Cafu","Franz Beckenbauer","Pelé","Ronaldo"],ans:2,diff:'very_hard',fact:"Pelé is the only player to win the World Cup three times (1958, 1962, 1970)."},
+  {q:"Which manager has won the most Champions League titles?",opts:["Alex Ferguson","Carlo Ancelotti","Pep Guardiola","Zinedine Zidane"],ans:1,diff:'very_hard',fact:"Carlo Ancelotti has won the Champions League four times: 2003, 2007, 2014, 2022."},
+  {q:"Which country has won the Copa América the most times?",opts:["Brazil","Argentina","Uruguay","Chile"],ans:2,diff:'very_hard',fact:"Uruguay have won the Copa América 15 times — more than any other nation."},
+  {q:"Who was the first player to score five goals in a single Champions League match?",opts:["Cristiano Ronaldo","Lionel Messi","Luiz Adriano","Marco van Basten"],ans:2,diff:'very_hard',fact:"Luiz Adriano scored five goals for Shakhtar Donetsk against BATE Borisov in 2014."},
+  {q:"Which player scored the fastest goal in a Champions League final?",opts:["Roy Makaay","Paolo Maldini","Sergio Ramos","Didier Drogba"],ans:1,diff:'very_hard',fact:"Paolo Maldini scored for AC Milan after just 51 seconds in the 2005 UCL final vs Liverpool."},
+  {q:"Which club holds the record for most goals in a single UCL campaign?",opts:["Bayern Munich 2019-20","Real Madrid 2021-22","Barcelona 1999-00","Manchester City 2022-23"],ans:0,diff:'very_hard',fact:"Bayern Munich scored 43 goals during their 2019-20 Champions League winning campaign."},
+  {q:"In what year was the UEFA Champions League rebranded from the European Cup?",opts:["1990","1991","1992","1993"],ans:2,diff:'very_hard',fact:"The European Cup was rebranded as the UEFA Champions League in the 1992-93 season."},
+  {q:"Which player scored in seven consecutive Champions League matches in one season?",opts:["Cristiano Ronaldo","Karim Benzema","Ruud van Nistelrooy","Lionel Messi"],ans:2,diff:'very_hard',fact:"Ruud van Nistelrooy scored in 7 consecutive UCL matches for Manchester United in 2002-03."},
+  {q:"Which World Cup had the highest average goals per game of the modern era?",opts:["1954","1970","1982","1998"],ans:0,diff:'very_hard',fact:"The 1954 World Cup averaged 5.38 goals per game — an all-time record."},
+  {q:"Which English club won the Champions League despite finishing 5th in their league?",opts:["Chelsea","Liverpool 2004-05","Manchester United","Nottingham Forest"],ans:1,diff:'very_hard',fact:"Liverpool qualified as defending champions in 2004-05 and won it in Istanbul."},
+  {q:"Who is the youngest player to score in El Clásico?",opts:["Lamine Yamal","Raúl","Vinícius Júnior","Bojan Krkić"],ans:0,diff:'very_hard',fact:"Lamine Yamal scored for Barcelona against Real Madrid at just 17 years old."},
+  {q:"What was the scoreline of the biggest World Cup semi-final defeat ever?",opts:["5-0","7-1","6-0","4-0"],ans:1,diff:'very_hard',fact:"Germany beat Brazil 7-1 in Belo Horizonte at the 2014 World Cup — the Mineirazo."},
+  {q:"Who holds the Bundesliga record for most goals in a single season?",opts:["Gerd Müller","Robert Lewandowski","Pierre-Emerick Aubameyang","Erling Haaland"],ans:1,diff:'very_hard',fact:"Robert Lewandowski scored 41 goals in the 2020-21 Bundesliga season, breaking Müller's 49-year-old record."},
+  {q:"Which club held the record for most consecutive league titles before Man City?",opts:["Juventus","Lyon","Celtic","Ajax"],ans:1,diff:'very_hard',fact:"Olympique Lyonnais won 7 consecutive Ligue 1 titles from 2002 to 2008."},
+  {q:"Who scored a hat-trick in under 3 minutes in a League Cup match?",opts:["Ian Rush","Robbie Fowler","Jermain Defoe","Emile Heskey"],ans:1,diff:'very_hard',fact:"Robbie Fowler scored three goals in 4 mins 33 secs for Liverpool vs Arsenal in 1994 — the fastest hat-trick in English football at the time."},
+
+  // ─── IMPOSSIBLE (Diamond rank questions) ─────────────────────────────────
+
+  {q:"What shirt number did Johan Cruyff refuse to wear at the 1974 World Cup?",opts:["12","13","14","15"],ans:1,diff:'impossible',fact:"Cruyff refused to wear #13, considered unlucky, and wore #14 instead — which became iconic."},
+  {q:"Who holds the Serie A record for most goals in a single season?",opts:["Gabriel Batistuta","Gunnar Nordahl","Antonio Valentin Angelillo","Cristiano Ronaldo"],ans:2,diff:'impossible',fact:"Antonio Valentin Angelillo scored 33 Serie A goals for Inter Milan in 1958-59."},
+  {q:"Who is the only player to win the World Cup and Champions League as both a player AND a coach?",opts:["Didier Deschamps","Fabio Capello","Johan Cruyff","Franz Beckenbauer"],ans:0,diff:'impossible',fact:"Deschamps won the World Cup as France captain (1998) and manager (2018)."},
+  {q:"What year did football first appear in the Olympic Games?",opts:["1896","1900","1904","1908"],ans:1,diff:'impossible',fact:"Football made its Olympic debut at the 1900 Paris Games."},
+  {q:"What is the record for most goals scored by a goalkeeper in a single professional season?",opts:["5","6","9","12"],ans:2,diff:'impossible',fact:"Brazilian goalkeeper Rogério Ceni scored 9 goals in a single season for São Paulo."},
+  {q:"Which player scored the winning goal in EVERY knockout match of a single UCL campaign?",opts:["Cristiano Ronaldo 2017","Karim Benzema 2022","Fernando Morientes 2000","Emilio Butragueño 1986"],ans:1,diff:'impossible',fact:"Karim Benzema scored decisive goals in every UCL knockout round for Real Madrid's 2021-22 triumph."},
+  {q:"Which nation appeared in a World Cup final having not played a single minute of qualifying?",opts:["Italy","France","West Germany","Spain"],ans:0,diff:'impossible',fact:"Italy were given a bye into the 1934 World Cup final as hosts — they went on to win it."},
+  {q:"How many countries have ever won the FIFA World Cup?",opts:["6","7","8","9"],ans:2,diff:'impossible',fact:"Only 8 nations have won: Brazil, Germany, Italy, Argentina, France, Uruguay, England, Spain."},
+  {q:"Who was the only non-European or South American player to win the Ballon d'Or before 2023?",opts:["George Weah — Liberia","Eusébio — Portugal","Samuel Eto'o — Cameroon","Didier Drogba — Ivory Coast"],ans:0,diff:'impossible',fact:"George Weah of Liberia won the 1995 Ballon d'Or — still the only African-born winner."},
+  {q:"Which club did Pep Guardiola manage before Bayern Munich?",opts:["Spain national team","FC Barcelona B","Barcelona","Girona"],ans:2,diff:'impossible',fact:"Guardiola managed Barcelona's first team from 2008 to 2012 before joining Bayern Munich."},
+  {q:"Who was the top scorer in the first-ever Premier League season 1992-93?",opts:["Alan Shearer","Les Ferdinand","Teddy Sheringham","Chris Sutton"],ans:2,diff:'impossible',fact:"Teddy Sheringham scored 22 goals for Tottenham to win the first Premier League Golden Boot."},
+  {q:"How many red cards were shown in the entire 1998 FIFA World Cup?",opts:["16","22","17","28"],ans:1,diff:'impossible',fact:"The 1998 World Cup saw a record 22 red cards shown across 64 matches."},
+  {q:"Which club did Ronaldo Nazário play for between Barça and Inter Milan?",opts:["Real Madrid","PSV","No club — direct move","Deportivo La Coruña"],ans:1,diff:'impossible',fact:"Ronaldo went from Barcelona (1996) to PSV Eindhoven briefly before joining Inter Milan."},
+  {q:"Against which club did Wayne Rooney score his famous overhead kick for Man United?",opts:["Arsenal","Liverpool","Chelsea","Manchester City"],ans:3,diff:'impossible',fact:"Rooney's stunning bicycle kick against Manchester City in February 2011 is widely considered his greatest goal."},
+  {q:"Which Italian city had TWO clubs in the same European Cup final?",opts:["Rome","Turin","Milan","Naples"],ans:2,diff:'impossible',fact:"AC Milan beat Inter Milan in the 2003 Champions League final — both clubs are from Milan."},
+  {q:"How many World Cup qualifying matches did Brazil fail to win en route to 2022?",opts:["0 — won all 17","2","4","6"],ans:0,diff:'impossible',fact:"Brazil won all 17 of their CONMEBOL qualifying matches for the 2022 World Cup — a perfect record."},
+  {q:"Who scored for Manchester United against Bayern in the 1999 UCL final as a substitute?",opts:["Ole Gunnar Solskjær only","Teddy Sheringham only","Both Sheringham and Solskjær","Andy Cole"],ans:2,diff:'impossible',fact:"Teddy Sheringham (90+1) and Ole Gunnar Solskjær (90+3) both scored as substitutes to win the treble."},
+  {q:"Which club was famously relegated from the Bundesliga despite having a positive goal difference?",opts:["Hamburger SV","Hertha Berlin","Kaiserslautern","Stuttgart"],ans:0,diff:'impossible',fact:"Hamburger SV were relegated in 2018 after 55 consecutive seasons in the Bundesliga — the last founding member to go down."},
+  {q:"Who holds the record for most international goals for a European nation?",opts:["Cristiano Ronaldo","Ali Daei","Miroslav Klose","Ferenc Puskás"],ans:0,diff:'impossible',fact:"Cristiano Ronaldo has scored 130+ international goals for Portugal — the all-time record for any nation."},
+  {q:"Which club was stripped of the 1993 Champions League title due to match-fixing?",opts:["Juventus","Marseille","PSG","Lyon"],ans:1,diff:'impossible',fact:"Olympique de Marseille's 1993 UCL title was not stripped, but they were banned from defending due to the VA-OM match-fixing scandal."},
+
+  // ─── LEGEND (Legend rank questions) ─────────────────────────────────────
+
+  {q:"Who is the only player to have played in World Cup finals for two different countries?",opts:["Robert Prosinečki","Josip Weber","Luis Monti","Dejan Savićević"],ans:2,diff:'legend',fact:"Luis Monti played in the 1930 World Cup final for Argentina and the 1934 final for Italy."},
+  {q:"What is the highest number of goals scored in a single Champions League group stage match?",opts:["7","8","9","11"],ans:3,diff:'legend',fact:"Feyenoord beat AS Trencin 11-0 in the 1986-87 European Cup — though in modern group stages, Bayer Leverkusen beat Feyenoord 6-0 in 2024 with 11 coming via aggregate."},
+  {q:"Which player holds the record for the most UEFA Cup / Europa League goals all-time?",opts:["Henrik Larsson","Radamel Falcao","Jürgen Klinsmann","Aritz Aduriz"],ans:1,diff:'legend',fact:"Radamel Falcao scored 17 Europa League goals in a single campaign (2011-12) — the single-season record."},
+  {q:"Which club did legendary Brazilian goalkeeper Rogério Ceni play his entire career at?",opts:["Flamengo","Santos","Vasco da Gama","São Paulo"],ans:3,diff:'legend',fact:"Rogério Ceni played 1,257 matches for São Paulo and scored 131 goals — all from free kicks and penalties."},
+  {q:"Who scored the winning goal in the 1966 World Cup final for England?",opts:["Bobby Charlton","Geoff Hurst","Roger Hunt","Martin Peters"],ans:1,diff:'legend',fact:"Geoff Hurst scored a famous hat-trick, including the controversial third goal that bounced off the crossbar."},
+  {q:"How many European Cup/UCL titles did Real Madrid win in their first six seasons of the competition?",opts:["3","4","5","6"],ans:2,diff:'legend',fact:"Real Madrid won the European Cup in its first five editions (1956–1960) and again in 1966 — six titles in 11 years."},
+  {q:"Which two players shared the 2000 FIFA Player of the Century award?",opts:["Zidane & Ronaldo","Ronaldo & Maldini","Pelé & Maradona","Cruyff & Beckenbauer"],ans:2,diff:'legend',fact:"FIFA named both Pelé and Maradona joint FIFA Players of the Century in 2000 after a fan vote."},
+  {q:"Who scored both goals for West Germany in the 1974 World Cup final against the Netherlands?",opts:["Gerd Müller & Breitner","Müller & Overath","Breitner & Hoeness","Müller & Sepp Maier"],ans:0,diff:'legend',fact:"Paul Breitner equalised from the penalty spot before Gerd Müller's winner gave West Germany the trophy."},
+  {q:"Which nation has appeared in the most World Cup finals without winning?",opts:["Netherlands","Hungary","Czechoslovakia","Sweden"],ans:0,diff:'legend',fact:"The Netherlands have appeared in three World Cup finals (1974, 1978, 2010) without ever winning."},
+  {q:"In which year was the offside rule last significantly changed to create the modern interpretation?",opts:["1990","1995","2003","2005"],ans:0,diff:'legend',fact:"The 1990 rule change gave attackers the benefit of the doubt — a player level with the last defender is onside."},
+  {q:"Who managed the Netherlands to the 1974 World Cup final, introducing Total Football globally?",opts:["Rinus Michels","Johan Cruyff","Guus Hiddink","Louis van Gaal"],ans:0,diff:'legend',fact:"Rinus Michels, who also managed at Ajax and Barcelona, is widely credited as the father of Total Football."},
+  {q:"Which club did AC Milan beat in the greatest Champions League group stage comeback — 4-0 down after the first leg?",opts:["Ajax","Deportivo La Coruña","Barcelona","Real Madrid"],ans:2,diff:'legend',fact:"AC Milan lost 4-0 to Barcelona in the 2012-13 UCL before winning the return leg 2-0 to go through on away goals."},
+  {q:"Who scored a hat-trick in the 1966 World Cup final — the only one ever in a final?",opts:["Bobby Charlton","Roger Hunt","Martin Peters","Geoff Hurst"],ans:3,diff:'legend',fact:"Geoff Hurst scored three goals in England's 4-2 win over West Germany at Wembley on 30 July 1966."},
+  {q:"What year did Hungary's 'Golden Team' suffer their shock World Cup final defeat despite being massive favourites?",opts:["1950","1952","1954","1958"],ans:2,diff:'legend',fact:"Hungary, unbeaten in four years, lost the 1954 World Cup final 3-2 to West Germany in the 'Miracle of Bern'."},
+  {q:"Which player holds the record for most appearances in the Copa América?",opts:["Lionel Messi","Javier Mascherano","Sergio Livingstone","Ángel Di María"],ans:2,diff:'legend',fact:"Chilean goalkeeper Sergio Livingstone holds the record with 34 Copa América appearances across four tournaments (1941-1955)."},
+  {q:"Which goalkeeper famously saved a penalty in a European Cup final without wearing gloves?",opts:["Lev Yashin","Dino Zoff","Pat Jennings","Sepp Maier"],ans:3,diff:'legend',fact:"Sepp Maier, Bayern Munich's legendary goalkeeper, saved a penalty in the 1974 European Cup final vs Atlético barehand."},
+  {q:"In what minute did Istanbul's UCL final comeback begin when Liverpool were 3-0 down to AC Milan?",opts:["40th","42nd","54th","60th"],ans:2,diff:'legend',fact:"Steven Gerrard headed home in the 54th minute to spark the miracle comeback, with Liverpool scoring three goals in 6 minutes."},
+  {q:"Who is the only manager to win the Champions League with three different clubs?",opts:["Carlo Ancelotti","Pep Guardiola","José Mourinho","No one — record not achieved"],ans:3,diff:'legend',fact:"No manager has won the Champions League with three different clubs. Ancelotti is closest with two (Milan, Real Madrid)."},
+  {q:"Which team won the inaugural FIFA Club World Cup in 2000?",opts:["Manchester United","Real Madrid","Corinthians","Bayern Munich"],ans:2,diff:'legend',fact:"Corinthians of Brazil won the inaugural FIFA Club World Cup in 2000, held in Brazil."},
+  {q:"Who scored a hat-trick in a World Cup semi-final aged 17 — one of the youngest ever?",opts:["Pelé","Kylian Mbappé","Cesc Fàbregas","Wayne Rooney"],ans:0,diff:'legend',fact:"Pelé scored a hat-trick against France in the 1958 World Cup semi-final at age 17 years and 244 days."},
 ];
+
+// ════════════════════════════════════════════
+// DIFFICULTY → RANK MAPPING
+// Controls which questions appear at each rank
+// ════════════════════════════════════════════
+const DIFF_BY_RANK = {
+  'Bronze':   ['easy'],
+  'Silver':   ['easy', 'medium'],
+  'Gold':     ['medium', 'hard'],
+  'Platinum': ['hard', 'very_hard'],
+  'Diamond':  ['very_hard', 'impossible'],
+  'Legend':   ['impossible', 'legend'],
+};
+
+// XP per correct answer by difficulty
+const DXPM = {
+  easy: 8,
+  medium: 12,
+  hard: 16,
+  very_hard: 20,
+  impossible: 26,
+  legend: 35,
+};
+
+// Display labels
+const DLABEL = {
+  easy: '⚽ Easy',
+  medium: '🎯 Medium',
+  hard: '🔥 Hard',
+  very_hard: '💀 Very Hard',
+  impossible: '☠️ Impossible',
+  legend: '👑 LEGEND',
+};
+
+// CSS classes for diff badge
+const DCLASS = {
+  easy: 'diff-easy',
+  medium: 'diff-medium',
+  hard: 'diff-hard',
+  very_hard: 'diff-very-hard',
+  impossible: 'diff-impossible',
+  legend: 'diff-legend',
+};
+
+// ════════════════════════════════════════════
+// RANKED QUESTION SELECTOR
+// Call this instead of slicing RANKED_POOL directly
+// Returns 10 questions appropriate for the player's rank
+// ════════════════════════════════════════════
+function getRankedQuestions() {
+  const rank = getRank(pd.xp);
+  const allowedDiffs = DIFF_BY_RANK[rank.name] || ['easy'];
+  const pool = RANKED_POOL.filter(q => allowedDiffs.includes(q.diff));
+  // Shuffle and take 10 (or fewer if pool is small)
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(10, shuffled.length));
+}
 
 // ════════════════════════════════════════════
 // CAREER PATH DATA
