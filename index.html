@@ -4,368 +4,1248 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The 90th Minute — Football Quiz</title>
-<meta name="description" content="Test your football knowledge. Guess the footballer. Collect legends.">
-<meta property="og:title" content="The 90th Minute — Football Quiz">
-<meta name="theme-color" content="#0a1628">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Barlow:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pitch: #060e1a;
+  --pitch-mid: #0b1829;
+  --pitch-card: rgba(255,255,255,0.04);
+  --pitch-border: rgba(255,255,255,0.07);
+  --green: #00e676;
+  --green-dim: rgba(0,230,118,0.12);
+  --red: #ff3d57;
+  --gold: #ffc400;
+  --gold-dim: rgba(255,196,0,0.12);
+  --purple: #c084fc;
+  --purple-dim: rgba(192,132,252,0.12);
+  --teal: #00e5ff;
+  --orange: #ff6d00;
+  --white: #f0f4ff;
+  --grey: #6b7a90;
+  --radius: 14px;
+  --t: 0.22s cubic-bezier(0.4,0,0.2,1);
+
+  --rank-bronze: #cd7f32;
+  --rank-silver: #b8c0cc;
+  --rank-gold: #ffc400;
+  --rank-platinum: #7dd3fc;
+  --rank-diamond: #a5f3fc;
+  --rank-legend: #ff6b6b;
+  --rank-icon: #ff6b6b;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Barlow',sans-serif;
+  background:var(--pitch);
+  color:var(--white);
+  min-height:100dvh;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* Ambient background */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 120% 50% at 50% -10%,rgba(0,230,118,0.055) 0%,transparent 65%),
+    radial-gradient(ellipse 60% 60% at 80% 80%,rgba(192,132,252,0.04) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 40% at 20% 60%,rgba(255,196,0,0.03) 0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);
+  background-size:50px 50px;
+  pointer-events:none;z-index:0;
+}
+
+.screen{
+  position:relative;z-index:1;
+  min-height:100dvh;
+  display:none;flex-direction:column;
+  align-items:center;
+}
+.screen.active{display:flex;}
+
+/* ══ TOP BAR ══ */
+.top-bar{
+  position:fixed;top:0;left:0;right:0;
+  padding:10px 18px;
+  display:flex;justify-content:space-between;align-items:center;
+  z-index:50;
+  background:linear-gradient(to bottom,rgba(6,14,26,0.97) 70%,transparent);
+}
+.rank-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  border-radius:100px;padding:7px 14px;cursor:pointer;
+  transition:var(--t);
+}
+.rank-pill:hover{background:rgba(255,255,255,0.08);}
+.rank-pill .rxp{font-size:11px;color:var(--grey);}
+.top-bar-btns{display:flex;gap:8px;}
+.tb-btn{
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  border-radius:100px;padding:7px 14px;
+  font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  cursor:pointer;transition:var(--t);color:var(--grey);
+}
+.tb-btn:hover{background:rgba(255,255,255,0.08);color:var(--white);}
+.tb-btn.gold{border-color:rgba(255,196,0,0.3);color:var(--gold);}
+.tb-btn.gold:hover{background:var(--gold-dim);}
+.tb-btn.purple{border-color:rgba(192,132,252,0.3);color:var(--purple);}
+.tb-btn.purple:hover{background:var(--purple-dim);}
+
+/* ══ HOME ══ */
+#home-screen{justify-content:center;padding:24px 16px;gap:0;}
+.home-eyebrow{
+  font-size:10px;letter-spacing:5px;text-transform:uppercase;
+  color:var(--green);font-weight:700;
+  margin-top:64px;margin-bottom:12px;
+  opacity:0;animation:fadeUp .5s .1s forwards;
+}
+.home-title{
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(60px,13vw,130px);
+  line-height:.88;text-align:center;letter-spacing:-1px;
+  margin-bottom:20px;
+  opacity:0;animation:fadeUp .6s .25s forwards;
+}
+.home-title span{color:var(--green);display:block;}
+.home-sub{
+  font-size:15px;color:var(--grey);text-align:center;
+  max-width:380px;line-height:1.6;margin-bottom:40px;
+  opacity:0;animation:fadeUp .6s .4s forwards;
+}
+
+.mode-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;width:100%;max-width:680px;
+  opacity:0;animation:fadeUp .6s .55s forwards;
+}
+
+.mode-card{
+  background:var(--pitch-card);
+  border:1px solid var(--pitch-border);
+  border-radius:18px;padding:24px 20px;
+  cursor:pointer;transition:var(--t);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:10px;
+}
+.mode-card::before{
+  content:'';position:absolute;inset:0;
+  background:var(--glow,rgba(0,230,118,0.08));
+  opacity:0;transition:opacity var(--t);
+}
+.mode-card:hover::before{opacity:1;}
+.mode-card:hover{border-color:rgba(255,255,255,0.18);transform:translateY(-2px);}
+.mode-card:active{transform:translateY(0);}
+
+.mode-card.ranked{--glow:rgba(255,196,0,0.08);border-color:rgba(255,196,0,0.15);grid-column:1/-1;}
+.mode-card.guess{--glow:rgba(192,132,252,0.1);border-color:rgba(192,132,252,0.2);grid-column:1/-1;}
+.mode-card.career{--glow:rgba(0,229,255,0.08);border-color:rgba(0,229,255,0.15);}
+.mode-card.winners{--glow:rgba(255,109,0,0.08);border-color:rgba(255,109,0,0.15);}
+
+.mode-icon{font-size:30px;line-height:1;}
+.mode-name{
+  font-family:'Black Han Sans',sans-serif;
+  font-size:20px;letter-spacing:.5px;
+}
+.mode-name.ranked{color:var(--gold);}
+.mode-name.guess{color:var(--purple);}
+.mode-name.career{color:var(--teal);}
+.mode-name.winners{color:var(--orange);}
+.mode-desc{font-size:12px;color:var(--grey);line-height:1.5;}
+.mode-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  border-radius:100px;padding:3px 10px;
+  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  align-self:flex-start;
+}
+.mode-badge.hard{background:rgba(255,61,87,0.15);border:1px solid rgba(255,61,87,0.3);color:var(--red);}
+.mode-badge.ranked{background:rgba(255,196,0,0.15);border:1px solid rgba(255,196,0,0.3);color:var(--gold);}
+.mode-badge.legends{background:rgba(192,132,252,0.15);border:1px solid rgba(192,132,252,0.3);color:var(--purple);}
+.mode-badge.timed{background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.3);color:var(--orange);}
+.mode-badge.career-b{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);color:var(--teal);}
+
+.home-footer{margin-top:28px;font-size:11px;color:var(--grey);opacity:0;animation:fadeUp .5s .7s forwards;}
+.home-footer span{color:var(--green);}
+
+/* ══ MODALS ══ */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.8);backdrop-filter:blur(14px);
+  z-index:100;display:none;
+  align-items:center;justify-content:center;padding:24px;
+}
+.modal-overlay.active{display:flex;}
+.modal-box{
+  background:#0c1828;border:1px solid rgba(255,255,255,0.1);
+  border-radius:22px;padding:36px 32px;
+  max-width:440px;width:100%;text-align:center;
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.modal-icon{font-size:44px;margin-bottom:14px;}
+.modal-title{font-family:'Black Han Sans',sans-serif;font-size:34px;margin-bottom:6px;}
+.modal-cat{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:22px;}
+.rules-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left;}
+.rules-list li{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.5;color:rgba(240,244,255,.8);}
+.rule-num{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--green);color:#000;
+  font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.modal-xp-row{
+  display:flex;justify-content:space-around;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;padding:12px;margin-bottom:22px;
+}
+.xpi-val{font-family:'Black Han Sans',sans-serif;font-size:19px;color:var(--gold);}
+.xpi-lbl{font-size:10px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+/* Name modal */
+.name-box{background:#0c1828;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:36px;max-width:380px;width:100%;text-align:center;animation:popIn .3s cubic-bezier(.34,1.56,.64,1) forwards;}
+.name-box h2{font-family:'Black Han Sans',sans-serif;font-size:28px;margin-bottom:8px;}
+.name-box p{color:var(--grey);font-size:13px;margin-bottom:22px;}
+.name-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:13px 16px;color:var(--white);font-family:'Barlow',sans-serif;font-size:17px;text-align:center;outline:none;margin-bottom:18px;transition:var(--t);}
+.name-input:focus{border-color:var(--green);}
+.name-input::placeholder{color:var(--grey);}
+
+/* Rank info */
+.rank-info-box{background:#0c1828;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:32px;max-width:400px;width:100%;animation:popIn .3s cubic-bezier(.34,1.56,.64,1) forwards;}
+.rank-info-box h2{font-family:'Black Han Sans',sans-serif;font-size:26px;text-align:center;margin-bottom:4px;}
+.rank-info-sub{text-align:center;font-size:12px;color:var(--grey);margin-bottom:20px;}
+.big-xp-display{text-align:center;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;margin-bottom:18px;}
+.big-xp-display .bxp{font-family:'Black Han Sans',sans-serif;font-size:38px;color:var(--gold);}
+.big-xp-display .bxl{font-size:10px;color:var(--grey);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.rank-tiers{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;}
+.rt-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);}
+.rt-row.cur{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.05);}
+.rt-icon{font-size:22px;min-width:28px;text-align:center;}
+.rt-name{font-family:'Black Han Sans',sans-serif;font-size:15px;}
+.rt-xp{font-size:11px;color:var(--grey);margin-top:2px;}
+.rt-cur-badge{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:100px;background:rgba(0,230,118,.15);color:var(--green);margin-left:auto;}
+
+/* ══ BUTTONS ══ */
+.btn-primary{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--green);color:#000;border:none;border-radius:100px;
+  padding:15px 36px;font-family:'Black Han Sans',sans-serif;font-size:17px;
+  letter-spacing:.5px;cursor:pointer;transition:var(--t);width:100%;
+}
+.btn-primary:hover{background:#00f080;transform:scale(1.02);}
+.btn-secondary{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.2);
+  border-radius:100px;padding:12px 28px;font-size:13px;font-weight:700;
+  cursor:pointer;transition:var(--t);
+}
+.btn-secondary:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.4);}
+
+/* ══ QUIZ SCREEN ══ */
+#quiz-screen{justify-content:flex-start;padding:0;}
+.quiz-header{
+  width:100%;padding:18px 22px 14px;
+  display:flex;align-items:center;gap:14px;
+  border-bottom:1px solid var(--pitch-border);flex-shrink:0;
+}
+.q-back{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:var(--t);font-size:16px;
+}
+.q-back:hover{background:rgba(255,255,255,.1);}
+.q-meta{flex:1;}
+.q-cat{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--green);font-weight:700;}
+.q-prog{font-size:12px;color:var(--grey);margin-top:1px;}
+.streak-pill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--gold-dim);border:1px solid rgba(255,196,0,.25);
+  border-radius:100px;padding:5px 11px;font-size:12px;font-weight:700;
+  color:var(--gold);transition:var(--t);opacity:0;
+}
+.streak-pill.on{opacity:1;}
+.score-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  border-radius:100px;padding:7px 14px;
+  font-family:'Black Han Sans',sans-serif;font-size:17px;
+}
+.prog-bar-wrap{width:100%;height:3px;background:rgba(255,255,255,.07);flex-shrink:0;}
+.prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),#00f080);transition:width .4s ease;}
+.timer-row{width:100%;padding:10px 22px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.timer-wrap{flex:1;height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+.timer-fill{height:100%;background:var(--green);border-radius:4px;transition:width 1s linear,background .3s;}
+.timer-fill.warn{background:var(--gold);}
+.timer-fill.danger{background:var(--red);}
+.timer-num{font-family:'Black Han Sans',sans-serif;font-size:19px;min-width:26px;text-align:right;}
+.quiz-body{
+  flex:1;width:100%;max-width:680px;margin:0 auto;
+  padding:22px 22px 32px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;
+}
+.diff-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:4px 12px;border-radius:100px;align-self:flex-start;
+}
+.diff-easy{background:rgba(0,230,118,.14);color:var(--green);}
+.diff-medium{background:rgba(255,196,0,.14);color:var(--gold);}
+.diff-hard{background:rgba(255,61,87,.14);color:var(--red);}
+.diff-impossible{background:rgba(192,132,252,.14);color:var(--purple);}
+.question-text{
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(20px,4.5vw,32px);
+  line-height:1.15;letter-spacing:.2px;
+}
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.opt-btn{
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  border-radius:14px;padding:17px 15px;color:var(--white);
+  font-family:'Barlow',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;text-align:left;transition:var(--t);
+  line-height:1.35;display:flex;align-items:flex-start;gap:9px;
+}
+.opt-btn:hover:not(:disabled){background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);transform:translateY(-1px);}
+.opt-btn:disabled{cursor:default;}
+.opt-btn.correct{background:rgba(0,230,118,.14);border-color:var(--green);color:var(--green);}
+.opt-btn.wrong{background:rgba(255,61,87,.12);border-color:var(--red);color:var(--red);}
+.opt-letter{
+  width:24px;height:24px;border-radius:7px;
+  background:rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;
+}
+.opt-btn.correct .opt-letter{background:var(--green);color:#000;}
+.opt-btn.wrong .opt-letter{background:var(--red);color:#fff;}
+.feedback-box{
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  border-radius:14px;padding:15px 18px;
+  font-size:13px;line-height:1.5;color:rgba(240,244,255,.8);
+  display:none;animation:fadeUp .3s forwards;
+}
+.feedback-box.show{display:block;}
+.feedback-box.correct{border-color:rgba(0,230,118,.3);}
+.feedback-box.wrong{border-color:rgba(255,61,87,.2);}
+.fb-label{font-family:'Black Han Sans',sans-serif;font-size:17px;margin-bottom:4px;}
+.feedback-box.correct .fb-label{color:var(--green);}
+.feedback-box.wrong .fb-label{color:var(--red);}
+.xp-pill{
+  display:inline-flex;align-items:center;gap:6px;margin-top:8px;
+  background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.2);
+  border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--gold);
+}
+.next-wrap{display:none;}
+.next-wrap.show{display:flex;justify-content:flex-end;}
+.btn-next{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--white);color:#000;border:none;border-radius:100px;
+  padding:13px 26px;font-family:'Black Han Sans',sans-serif;font-size:15px;
+  cursor:pointer;transition:var(--t);
+}
+.btn-next:hover{background:var(--green);transform:scale(1.03);}
+
+/* ══ RESULTS ══ */
+#results-screen{text-align:center;gap:0;padding:24px 16px;}
+.results-ring{position:relative;width:150px;height:150px;margin:0 auto 28px;animation:fadeUp .5s .1s both;}
+.results-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:8;}
+.ring-fill{fill:none;stroke:var(--green);stroke-width:8;stroke-linecap:round;stroke-dasharray:440;stroke-dashoffset:440;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1) .4s;}
+.ring-fill.fail{stroke:var(--red);}
+.ring-fill.mid{stroke:var(--gold);}
+.score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.score-big{font-family:'Black Han Sans',sans-serif;font-size:46px;line-height:1;}
+.score-denom{font-size:12px;color:var(--grey);}
+.results-grade{font-family:'Black Han Sans',sans-serif;font-size:clamp(32px,7vw,58px);margin-bottom:8px;animation:fadeUp .5s .3s both;}
+.results-quote{font-size:14px;font-style:italic;color:rgba(240,244,255,.6);max-width:380px;line-height:1.6;margin:0 auto 10px;animation:fadeUp .5s .45s both;}
+.results-attr{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:22px;animation:fadeUp .5s .55s both;}
+.xp-gained-box{
+  background:linear-gradient(135deg,rgba(255,196,0,.1),rgba(255,196,0,.05));
+  border:1px solid rgba(255,196,0,.25);border-radius:16px;
+  padding:16px 22px;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  max-width:440px;width:100%;
+}
+.xgb-left{text-align:left;}
+.xgb-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);margin-bottom:4px;}
+.xgb-num{font-family:'Black Han Sans',sans-serif;font-size:34px;color:var(--gold);line-height:1;}
+.xgb-breakdown{font-size:10px;color:rgba(255,196,0,.6);margin-top:2px;}
+.rank-block{text-align:right;}
+.rank-badge-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:5px;}
+.rank-badge-icon{font-size:26px;}
+.rank-badge-name{font-family:'Black Han Sans',sans-serif;font-size:18px;}
+.rank-prog-bar{width:130px;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-left:auto;}
+.rank-prog-fill{height:100%;border-radius:3px;transition:width 1.5s cubic-bezier(.4,0,.2,1) .8s;}
+.rank-prog-lbl{font-size:10px;color:var(--grey);margin-top:3px;}
+.rank-up-banner{
+  background:linear-gradient(135deg,rgba(255,107,107,.15),rgba(255,196,0,.1));
+  border:1px solid rgba(255,107,107,.3);border-radius:12px;
+  padding:10px 16px;font-family:'Black Han Sans',sans-serif;font-size:17px;
+  letter-spacing:1px;color:#ff6b6b;text-align:center;
+  animation:rankUpPulse .6s ease both;display:none;max-width:440px;width:100%;
+}
+.rank-up-banner.show{display:block;}
+.stats-row{display:flex;gap:10px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;animation:fadeUp .5s .7s both;}
+.stat-pill{background:var(--pitch-card);border:1px solid var(--pitch-border);border-radius:14px;padding:13px 18px;text-align:center;}
+.stat-val{font-family:'Black Han Sans',sans-serif;font-size:26px;line-height:1;}
+.stat-lbl{font-size:10px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.res-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;animation:fadeUp .5s .8s both;}
+
+/* ══ TIMEOUT ══ */
+.timeout-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(18px);
+  z-index:200;display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;text-align:center;padding:24px;
+}
+.timeout-overlay.active{display:flex;}
+.to-icon{font-size:68px;animation:shake .5s;}
+.to-title{font-family:'Black Han Sans',sans-serif;font-size:50px;color:var(--red);}
+.to-sub{color:var(--grey);font-size:15px;margin-bottom:22px;}
+
+/* ══ GUESS THE FOOTBALLER ══ */
+#guess-screen{justify-content:flex-start;padding:0;}
+.guess-body{flex:1;width:100%;max-width:660px;margin:0 auto;padding:20px 20px 36px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;}
+.clues-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.clue-pts-badge{
+  background:linear-gradient(135deg,rgba(192,132,252,.2),rgba(192,132,252,.1));
+  border:1px solid rgba(192,132,252,.4);border-radius:100px;
+  padding:5px 13px;font-size:12px;font-weight:700;color:var(--purple);
+}
+.clue-counter{font-size:11px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;}
+.clue-card{
+  background:linear-gradient(135deg,rgba(192,132,252,.07),rgba(11,24,41,.9));
+  border:1px solid rgba(192,132,252,.18);
+  border-radius:13px;padding:14px 18px;
+  animation:clueReveal .4s cubic-bezier(.34,1.56,.64,1) forwards;
+  display:flex;align-items:flex-start;gap:11px;
+}
+.clue-num{
+  width:26px;height:26px;border-radius:7px;
+  background:rgba(192,132,252,.2);border:1px solid rgba(192,132,252,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0;
+}
+.clue-cat{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--purple);font-weight:700;margin-bottom:3px;}
+.clue-text{font-size:14px;line-height:1.5;color:var(--white);}
+.reveal-btn-wrap{display:flex;justify-content:flex-start;}
+.btn-reveal{
+  background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.3);
+  border-radius:100px;padding:9px 18px;font-size:12px;font-weight:600;
+  color:var(--purple);cursor:pointer;transition:var(--t);
+  display:flex;align-items:center;gap:6px;
+}
+.btn-reveal:hover{background:rgba(192,132,252,.2);}
+.btn-reveal:disabled{opacity:.3;cursor:default;}
+.guess-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.g-opt-btn{
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  border-radius:13px;padding:15px 13px;color:var(--white);
+  font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;text-align:left;transition:var(--t);
+  display:flex;align-items:center;gap:9px;
+}
+.g-opt-btn:hover:not(:disabled){background:var(--purple-dim);border-color:rgba(192,132,252,.4);transform:translateY(-1px);}
+.g-opt-btn:disabled{cursor:default;}
+.g-opt-btn.correct{background:rgba(0,230,118,.14);border-color:var(--green);color:var(--green);}
+.g-opt-btn.wrong{background:rgba(255,61,87,.12);border-color:var(--red);color:var(--red);}
+.guess-feedback{
+  background:var(--pitch-card);border:1px solid rgba(192,132,252,.25);
+  border-radius:18px;padding:22px;text-align:center;
+  animation:fadeUp .4s both;display:none;
+}
+.gf-icon{font-size:38px;margin-bottom:7px;}
+.gf-name{font-family:'Black Han Sans',sans-serif;font-size:26px;margin-bottom:5px;}
+.gf-detail{font-size:12px;color:var(--grey);line-height:1.5;margin-bottom:10px;}
+.gf-card-reveal{display:flex;justify-content:center;margin-top:8px;}
+
+/* Footballer Card */
+.fc-card{
+  width:134px;border-radius:15px;overflow:hidden;
+  position:relative;cursor:pointer;transition:var(--t);flex-shrink:0;
+}
+.fc-card:hover{transform:scale(1.05) rotate(1deg);}
+.fc-inner{border-radius:15px;overflow:hidden;position:relative;}
+.fc-bronze .fc-inner{background:linear-gradient(155deg,#2a1a0a,#3d2510);border:2px solid #cd7f32;box-shadow:0 0 18px rgba(205,127,50,.3);}
+.fc-silver .fc-inner{background:linear-gradient(155deg,#161e28,#1e2a38);border:2px solid #b8c0cc;box-shadow:0 0 18px rgba(184,192,204,.22);}
+.fc-gold .fc-inner{background:linear-gradient(155deg,#1a1400,#2a2200);border:2px solid var(--gold);box-shadow:0 0 22px rgba(255,196,0,.38);}
+.fc-legend .fc-inner{background:linear-gradient(155deg,#1a0808,#220a1a);border:2px solid #ff6b6b;box-shadow:0 0 28px rgba(255,107,107,.5);animation:legendGlow 2s ease-in-out infinite;}
+.fc-emoji{height:82px;display:flex;align-items:center;justify-content:center;font-size:42px;background:rgba(255,255,255,.03);position:relative;}
+.fc-rtag{position:absolute;top:5px;right:5px;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:100px;}
+.fc-bronze .fc-rtag{background:rgba(205,127,50,.2);color:#cd7f32;}
+.fc-silver .fc-rtag{background:rgba(184,192,204,.15);color:#b8c0cc;}
+.fc-gold .fc-rtag{background:rgba(255,196,0,.2);color:var(--gold);}
+.fc-legend .fc-rtag{background:rgba(255,107,107,.2);color:#ff6b6b;}
+.fc-info{padding:9px 9px 11px;}
+.fc-name{font-family:'Black Han Sans',sans-serif;font-size:12px;line-height:1.1;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fc-nation{font-size:10px;color:var(--grey);}
+.fc-stats{display:flex;justify-content:space-between;margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.06);}
+.fc-stat-val{font-family:'Black Han Sans',sans-serif;font-size:13px;line-height:1;}
+.fc-stat-lbl{font-size:8px;color:var(--grey);text-transform:uppercase;letter-spacing:.5px;}
+.fc-locked{position:absolute;inset:0;background:rgba(6,14,26,.85);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:13px;gap:5px;}
+.fc-locked .li{font-size:26px;opacity:.5;}
+.fc-locked .ll{font-size:9px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;}
+
+/* Guess results */
+#guess-results-screen{justify-content:flex-start;padding:36px 16px;gap:0;text-align:center;}
+.gr-top{margin-bottom:22px;animation:fadeUp .5s both;}
+.gr-icon{font-size:52px;margin-bottom:10px;}
+.gr-title{font-family:'Black Han Sans',sans-serif;font-size:38px;margin-bottom:10px;}
+.gr-score-wrap{display:flex;align-items:baseline;justify-content:center;gap:5px;margin-bottom:4px;}
+.gr-big{font-family:'Black Han Sans',sans-serif;font-size:68px;color:var(--purple);line-height:1;}
+.gr-max{font-size:18px;color:var(--grey);}
+.gr-grade{font-size:14px;color:var(--grey);margin-bottom:24px;animation:fadeUp .5s .2s both;}
+.unlocked-section{width:100%;max-width:480px;margin-bottom:22px;animation:fadeUp .5s .3s both;}
+.unlocked-hdr{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--purple);margin-bottom:12px;}
+.unlocked-grid{display:flex;gap:11px;justify-content:center;flex-wrap:wrap;}
+
+/* ══ CAREER PATH MODE ══ */
+#career-screen{justify-content:flex-start;padding:0;}
+.career-body{flex:1;width:100%;max-width:660px;margin:0 auto;padding:20px 20px 36px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
+.career-header-info{
+  background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(0,229,255,.04));
+  border:1px solid rgba(0,229,255,.2);border-radius:14px;padding:16px 20px;
+}
+.ch-footballer{font-family:'Black Han Sans',sans-serif;font-size:28px;margin-bottom:2px;}
+.ch-sub{font-size:12px;color:var(--grey);}
+.ch-progress{
+  display:flex;align-items:center;gap:10px;margin-top:12px;
+}
+.ch-prog-bar{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
+.ch-prog-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .5s ease;}
+.ch-prog-lbl{font-size:11px;color:var(--teal);}
+.career-phase-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);
+  border-radius:100px;padding:5px 13px;font-size:11px;font-weight:700;
+  color:var(--teal);align-self:flex-start;letter-spacing:1px;
+}
+.career-question-text{font-family:'Black Han Sans',sans-serif;font-size:clamp(18px,4vw,28px);line-height:1.2;letter-spacing:.2px;}
+.career-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.career-opt{
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  border-radius:13px;padding:15px 13px;color:var(--white);
+  font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;text-align:left;transition:var(--t);
+  display:flex;align-items:flex-start;gap:9px;
+}
+.career-opt:hover:not(:disabled){background:rgba(0,229,255,.06);border-color:rgba(0,229,255,.3);transform:translateY(-1px);}
+.career-opt:disabled{cursor:default;}
+.career-opt.correct{background:rgba(0,230,118,.14);border-color:var(--green);color:var(--green);}
+.career-opt.wrong{background:rgba(255,61,87,.12);border-color:var(--red);color:var(--red);}
+.career-fb{
+  background:var(--pitch-card);border:1px solid rgba(0,229,255,.2);
+  border-radius:14px;padding:15px 18px;font-size:13px;line-height:1.5;
+  color:rgba(240,244,255,.8);display:none;animation:fadeUp .3s forwards;
+}
+.career-fb.show{display:block;}
+.career-fb.correct{border-color:rgba(0,230,118,.3);}
+.career-fb.wrong{border-color:rgba(255,61,87,.2);}
+.career-fb-lbl{font-family:'Black Han Sans',sans-serif;font-size:17px;margin-bottom:4px;}
+.career-fb.correct .career-fb-lbl{color:var(--green);}
+.career-fb.wrong .career-fb-lbl{color:var(--red);}
+.career-footballer-card{
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(135deg,rgba(0,229,255,.06),rgba(11,24,41,.9));
+  border:1px solid rgba(0,229,255,.15);border-radius:14px;padding:14px 18px;
+}
+.cfc-emoji{font-size:36px;}
+.cfc-name{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--teal);}
+.cfc-sub{font-size:12px;color:var(--grey);}
+.lives-row{display:flex;align-items:center;gap:4px;}
+.life-dot{font-size:15px;transition:all .3s;}
+.life-dot.lost{opacity:.2;filter:grayscale(1);}
+.career-gameover{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);
+  z-index:300;display:none;align-items:center;justify-content:center;
+  flex-direction:column;text-align:center;padding:24px;
+}
+.career-gameover.active{display:flex;}
+.career-results{justify-content:flex-start;padding:36px 16px;gap:0;text-align:center;}
+
+/* ══ NAME ALL WINNERS MODE ══ */
+#winners-screen{justify-content:flex-start;padding:0;}
+.winners-body{flex:1;width:100%;max-width:760px;margin:0 auto;padding:20px 20px 36px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
+.winners-header-info{
+  background:linear-gradient(135deg,rgba(255,109,0,.08),rgba(255,109,0,.04));
+  border:1px solid rgba(255,109,0,.22);border-radius:14px;padding:16px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.whi-left .wh-title{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--orange);}
+.whi-left .wh-sub{font-size:12px;color:var(--grey);margin-top:2px;}
+.wh-timer{
+  position:relative;width:60px;height:60px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.wh-timer svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);}
+.wh-ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:4;}
+.wh-ring-fill{fill:none;stroke:var(--orange);stroke-width:4;stroke-linecap:round;stroke-dasharray:165;stroke-dashoffset:0;transition:stroke-dashoffset .5s linear,stroke .3s;}
+.wh-timer-num{position:relative;z-index:1;font-family:'Black Han Sans',sans-serif;font-size:18px;}
+.winners-toggle{
+  display:flex;gap:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:100px;overflow:hidden;align-self:flex-start;
+}
+.wt-btn{
+  padding:8px 20px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  border:none;background:transparent;color:var(--grey);cursor:pointer;transition:var(--t);
+}
+.wt-btn.active{background:var(--orange);color:#000;}
+.winners-input-area{display:flex;gap:8px;}
+.w-input{
+  flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;padding:13px 16px;color:var(--white);
+  font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:var(--t);
+}
+.w-input:focus{border-color:var(--orange);}
+.w-input::placeholder{color:var(--grey);}
+.w-submit{
+  background:var(--orange);color:#fff;border:none;border-radius:12px;
+  padding:13px 20px;font-family:'Black Han Sans',sans-serif;font-size:14px;
+  cursor:pointer;transition:var(--t);white-space:nowrap;
+}
+.w-submit:hover{background:#ff8124;}
+.winners-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:8px;
+}
+.winner-slot{
+  background:var(--pitch-card);border:1px solid var(--pitch-border);
+  border-radius:12px;padding:10px 14px;
+  display:flex;align-items:center;gap:10px;
+  transition:var(--t);
+}
+.winner-slot.found{
+  background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.3);
+  animation:slotReveal .4s cubic-bezier(.34,1.56,.64,1);
+}
+.winner-slot.missed{background:rgba(255,61,87,.08);border-color:rgba(255,61,87,.25);}
+.ws-year{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--grey);min-width:36px;}
+.ws-name{font-size:13px;font-weight:600;color:var(--grey);}
+.winner-slot.found .ws-name{color:var(--green);}
+.winner-slot.missed .ws-name{color:var(--red);}
+.ws-check{font-size:14px;margin-left:auto;}
+.progress-label{font-size:13px;color:var(--grey);}
+.progress-label span{color:var(--orange);font-weight:700;}
+.winners-gameover{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);
+  z-index:300;display:none;align-items:center;justify-content:center;
+  flex-direction:column;text-align:center;padding:24px;gap:16px;
+}
+.winners-gameover.active{display:flex;}
+.hint-feed{
+  font-size:12px;color:var(--orange);text-align:center;
+  min-height:18px;animation:fadeUp .3s both;
+}
+.wrong-flash{animation:wrongShake .4s;}
+
+/* ══ LEADERBOARD ══ */
+#leaderboard-screen{justify-content:flex-start;padding:80px 16px 32px;}
+.lb-hdr{text-align:center;margin-bottom:28px;animation:fadeUp .5s both;}
+.lb-hdr h2{font-family:'Black Han Sans',sans-serif;font-size:44px;}
+.lb-hdr p{color:var(--grey);font-size:13px;margin-top:4px;}
+.lb-table{width:100%;max-width:520px;display:flex;flex-direction:column;gap:7px;animation:fadeUp .5s .2s both;margin-bottom:22px;}
+.lb-row{display:flex;align-items:center;gap:12px;background:var(--pitch-card);border:1px solid var(--pitch-border);border-radius:13px;padding:13px 16px;transition:var(--t);}
+.lb-row.is-me{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.04);}
+.lb-row.top-1{border-color:rgba(255,196,0,.3);background:rgba(255,196,0,.04);}
+.lb-rnum{font-family:'Black Han Sans',sans-serif;font-size:20px;min-width:26px;text-align:center;color:var(--grey);}
+.lb-row.top-1 .lb-rnum{color:var(--gold);}
+.lb-row.top-2 .lb-rnum{color:#b8c0cc;}
+.lb-row.top-3 .lb-rnum{color:#cd7f32;}
+.lb-icon{font-size:20px;}
+.lb-info{flex:1;}
+.lb-name{font-size:14px;font-weight:600;}
+.lb-sub{font-size:10px;color:var(--grey);margin-top:1px;}
+.lb-xp{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--gold);}
+.lb-empty{text-align:center;color:var(--grey);font-size:13px;padding:36px 0;}
+
+/* ══ COLLECTABLES ══ */
+#collectables-screen{justify-content:flex-start;padding:60px 16px 32px;gap:0;}
+.col-hdr{text-align:center;margin-bottom:20px;}
+.col-hdr h2{font-family:'Black Han Sans',sans-serif;font-size:36px;}
+.col-hdr p{color:var(--grey);font-size:13px;margin-top:4px;}
+.col-filters{display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap;justify-content:center;}
+.col-filter{background:var(--pitch-card);border:1px solid var(--pitch-border);border-radius:100px;padding:6px 14px;font-size:11px;font-weight:700;color:var(--grey);cursor:pointer;transition:var(--t);letter-spacing:1px;text-transform:uppercase;}
+.col-filter:hover,.col-filter.active{background:rgba(255,255,255,.1);color:var(--white);border-color:rgba(255,255,255,.3);}
+.col-filter[data-rarity="bronze"].active{border-color:#cd7f32;color:#cd7f32;}
+.col-filter[data-rarity="silver"].active{border-color:#b8c0cc;color:#b8c0cc;}
+.col-filter[data-rarity="gold"].active{border-color:var(--gold);color:var(--gold);}
+.col-filter[data-rarity="legend"].active{border-color:#ff6b6b;color:#ff6b6b;}
+.col-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:11px;width:100%;max-width:680px;padding-bottom:32px;}
+
+/* ══ CARD DETAIL MODAL ══ */
+.card-detail-box{
+  background:#0b1828;border-radius:22px;padding:28px;
+  max-width:340px;width:100%;text-align:center;
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1) forwards;position:relative;
+}
+.cd-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.07);border:none;border-radius:50%;width:30px;height:30px;color:var(--white);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:var(--t);}
+.cd-close:hover{background:rgba(255,255,255,.14);}
+.cd-emoji{font-size:68px;margin-bottom:7px;}
+.cd-name{font-family:'Black Han Sans',sans-serif;font-size:28px;margin-bottom:4px;}
+.cd-sub{font-size:13px;margin-bottom:18px;}
+.cd-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+.cds-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:10px 7px;}
+.cds-val{font-family:'Black Han Sans',sans-serif;font-size:22px;line-height:1;}
+.cds-lbl{font-size:9px;color:var(--grey);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.cd-bio{font-size:12px;color:rgba(240,244,255,.7);line-height:1.6;text-align:left;}
+.cd-locked-msg{color:var(--grey);font-size:13px;padding:16px 0;}
+
+/* ══ XP FLOAT ══ */
+.xp-float{position:fixed;pointer-events:none;font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--gold);z-index:500;animation:xpFloat 1.2s ease forwards;}
+
+/* ══ ANIMATIONS ══ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.87)}to{opacity:1;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+@keyframes wrongShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes rankUpPulse{0%{opacity:0;transform:scale(.82)}60%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+@keyframes xpFloat{0%{opacity:0;transform:translateY(0) scale(.8)}30%{opacity:1;transform:translateY(-10px) scale(1.1)}70%{opacity:1;transform:translateY(-22px) scale(1)}100%{opacity:0;transform:translateY(-44px) scale(.9)}}
+@keyframes clueReveal{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes legendGlow{0%,100%{box-shadow:0 0 26px rgba(255,107,107,.5)}50%{box-shadow:0 0 46px rgba(255,107,107,.8),0 0 70px rgba(255,107,107,.3)}}
+@keyframes slotReveal{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.slide-out{animation:slideOut .18s forwards}
+.slide-in{animation:slideIn .28s forwards}
+@keyframes slideOut{to{opacity:0;transform:translateX(-26px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:translateX(0)}}
+
+/* ══ GUESS STREAK ══ */
+.guess-streak-bar{
+  width:100%;background:linear-gradient(135deg,rgba(192,132,252,.18),rgba(255,196,0,.1));
+  border-bottom:1px solid rgba(192,132,252,.3);text-align:center;
+  padding:6px 14px;font-size:12px;font-weight:700;color:var(--gold);
+  letter-spacing:1px;display:none;
+}
+.guess-streak-bar.on{display:block;}
+.mult-badge{
+  font-family:'Black Han Sans',sans-serif;font-size:12px;
+  background:linear-gradient(135deg,#a78bfa,#7c3aed);
+  color:#fff;border-radius:100px;padding:2px 7px;margin-left:3px;
+}
+.ft-diff-badge{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 7px;border-radius:100px;white-space:nowrap;}
+.ft-diff-badge.easy{background:rgba(0,230,118,.14);color:var(--green);border:1px solid rgba(0,230,118,.3);}
+.ft-diff-badge.hard{background:rgba(255,152,0,.14);color:#ff9800;border:1px solid rgba(255,152,0,.3);}
+.ft-diff-badge.legendary{background:rgba(255,107,107,.14);color:#ff6b6b;border:1px solid rgba(255,107,107,.3);}
+
+/* ══ CAREER DIFF ══ */
+.cq-diff{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:100px;display:inline-block;margin-bottom:8px;}
+.cq-diff.beginner{background:rgba(0,230,118,.14);color:var(--green);}
+.cq-diff.youth{background:rgba(0,229,255,.12);color:var(--teal);}
+.cq-diff.pro{background:rgba(255,196,0,.14);color:var(--gold);}
+.cq-diff.prime{background:rgba(255,61,87,.14);color:var(--red);}
+.cq-diff.legend{background:rgba(192,132,252,.14);color:var(--purple);}
+
+@media(max-width:500px){
+  .mode-grid{grid-template-columns:1fr 1fr;}
+  .opts-grid,.guess-opts,.career-opts{grid-template-columns:1fr;}
+  .modal-box{padding:28px 22px;}
+  .quiz-header{padding:14px 16px;}
+  .quiz-body,.guess-body,.career-body,.winners-body{padding:14px 14px 24px;}
+  .stats-row{flex-wrap:wrap;}
+  .xp-gained-box{flex-direction:column;text-align:center;}
+  .rank-badge-row{justify-content:center;}
+  .rank-prog-bar{margin:0 auto;}
+  .winners-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:360px){.home-title{font-size:52px;}.mode-name{font-size:17px;}}
+</style>
 </head>
 <body>
 
-<!-- ══ HOME SCREEN ══ -->
+<!-- HOME SCREEN -->
 <div id="home-screen" class="screen active">
-  <div class="home-top-bar">
-    <div class="player-rank-pill" id="rank-pill-btn">
-      <span class="rank-icon" id="home-rank-icon">🥉</span>
+  <div class="top-bar">
+    <div class="rank-pill" id="rank-pill-btn">
+      <span id="home-rank-icon" style="font-size:17px;">🥉</span>
       <div>
-        <div id="home-rank-name" style="font-size:13px;font-weight:700;">Bronze</div>
-        <div class="rank-xp" id="home-rank-xp">0 XP</div>
+        <div id="home-rank-name" style="font-size:12px;font-weight:700;">Bronze</div>
+        <div class="rxp" id="home-rank-xp">0 XP</div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;">
-      <button class="collectables-btn" id="collectables-open-btn">🃏 Collection</button>
-      <button class="leaderboard-btn" id="leaderboard-open-btn">🏆 Leaderboard</button>
+    <div class="top-bar-btns">
+      <button class="tb-btn purple" id="col-open-btn">🃏 Collection</button>
+      <button class="tb-btn gold" id="lb-open-btn">🏆 Board</button>
     </div>
   </div>
 
   <p class="home-eyebrow">⚽ Football Trivia</p>
   <h1 class="home-title">The 90th<span>Minute</span></h1>
-  <p class="home-subtitle">Test your knowledge, guess the footballer, collect legends. No two games are the same.</p>
+  <p class="home-sub">Master all four modes, collect legends, conquer the leaderboard.</p>
 
-  <div class="category-grid">
-    <div class="category-card weekly" data-quiz="weekly">
-      <div class="category-icon">🏆</div>
-      <div class="cat-text">
-        <div class="category-name">WEEKLY EVENT</div>
-        <div class="category-desc">Mixed questions spanning all competitions</div>
+  <div class="mode-grid">
+    <!-- RANKED — full width landscape -->
+    <div class="mode-card ranked" data-mode="ranked">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div class="mode-icon" style="margin-bottom:8px;">🏆</div>
+          <div class="mode-name ranked">RANKED MATCH</div>
+          <div class="mode-desc">10 random questions from a pool of 50+, spanning all competitions. 90 second clock. Build streaks, earn XP, climb the leaderboard.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <div class="mode-badge ranked">Earn XP</div>
+          <div class="mode-badge ranked">⏱ 90 Seconds</div>
+        </div>
       </div>
     </div>
-    <!-- GUESS THE FOOTBALLER -->
-    <div class="category-card guess-card" data-mode="guess">
-      <div class="category-icon">🕵️</div>
-      <div class="category-name">GUESS THE FOOTBALLER</div>
-      <div class="category-desc">Clues reveal one by one — name the legend</div>
-      <div class="guess-tag">+ Collectables</div>
+
+    <!-- GUESS THE FOOTBALLER — full width -->
+    <div class="mode-card guess" data-mode="guess">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div class="mode-icon" style="margin-bottom:8px;">🕵️</div>
+          <div class="mode-name guess">GUESS THE FOOTBALLER</div>
+          <div class="mode-desc">Clues reveal one by one. 8 footballers from 50+. Time per footballer. Collect cards.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <div class="mode-badge hard">Hard Mode</div>
+          <div class="mode-badge legends">+ Collectables</div>
+        </div>
+      </div>
     </div>
-    <div class="category-card prem-card" data-quiz="prem">
-      <div class="category-icon">🦁</div>
-      <div class="category-name">PREMIER LEAGUE</div>
-      <div class="category-desc">English top flight legends & stats</div>
+
+    <!-- CAREER PATH -->
+    <div class="mode-card career" data-mode="career">
+      <div class="mode-icon">📋</div>
+      <div class="mode-name career">CAREER PATH</div>
+      <div class="mode-desc">Deep questions about one footballer's entire career. 5 phases. No timer.</div>
+      <div class="mode-badge career-b">Deep Dive</div>
     </div>
-    <div class="category-card liga-card" data-quiz="liga">
-      <div class="category-icon">🌞</div>
-      <div class="category-name">LA LIGA</div>
-      <div class="category-desc">Spanish football history & El Clásico</div>
-    </div>
-    <div class="category-card ucl-card" data-quiz="ucl">
-      <div class="category-icon">⭐</div>
-      <div class="category-name">CHAMPIONS LEAGUE</div>
-      <div class="category-desc">Europe's elite competition</div>
-    </div>
-    <div class="category-card wc-card" data-quiz="wc">
-      <div class="category-icon">🌍</div>
-      <div class="category-name">WORLD CUP</div>
-      <div class="category-desc">The greatest tournament on earth</div>
+
+    <!-- NAME ALL WINNERS -->
+    <div class="mode-card winners" data-mode="winners">
+      <div class="mode-icon">🌍</div>
+      <div class="mode-name winners">NAME THE WINNERS</div>
+      <div class="mode-desc">Name every World Cup or UCL winner. 3 minutes. How many can you get?</div>
+      <div class="mode-badge timed">Race Clock</div>
     </div>
   </div>
-  <p class="home-footer">10 Questions · 90 Seconds · <span>Infinite Glory</span></p>
+
+  <p class="home-footer">50 Questions · 50 Footballers · <span>4 Modes · Infinite Glory</span></p>
 </div>
 
-<!-- ══ NAME ENTRY MODAL ══ -->
+<!-- NAME MODAL -->
 <div id="name-modal" class="modal-overlay">
-  <div class="name-modal-box">
-    <div style="font-size:48px;margin-bottom:16px;">👤</div>
+  <div class="name-box">
+    <div style="font-size:44px;margin-bottom:14px;">👤</div>
     <h2>What's Your Name?</h2>
-    <p>Your name will appear on the leaderboard. Choose wisely.</p>
-    <input type="text" class="name-input" id="name-input" maxlength="20" placeholder="Enter your name..." />
+    <p>Your name will appear on the leaderboard.</p>
+    <input type="text" class="name-input" id="name-input" maxlength="20" placeholder="Enter your name…" />
     <button class="btn-primary" id="name-confirm-btn">Let's Go ⚡</button>
   </div>
 </div>
 
-<!-- ══ RANK INFO MODAL ══ -->
+<!-- RANK INFO MODAL -->
 <div id="rank-info-modal" class="modal-overlay">
   <div class="rank-info-box">
     <h2>🎖 Rank System</h2>
-    <p class="rank-info-subtitle">Earn XP to climb the ranks</p>
-    <div class="your-xp-display">
-      <div class="big-xp" id="rank-info-xp">0</div>
-      <div class="xp-label">Total XP</div>
+    <p class="rank-info-sub">Earn XP to climb the ranks (harder than ever)</p>
+    <div class="big-xp-display">
+      <div class="bxp" id="rank-info-xp">0</div>
+      <div class="bxl">Total XP</div>
     </div>
-    <div class="rank-tiers-list" id="rank-tiers-list"></div>
-    <button class="btn-secondary" id="rank-info-close-btn" style="width:100%;">← Back</button>
+    <div class="rank-tiers" id="rank-tiers-list"></div>
+    <button class="btn-secondary" id="rank-info-close" style="width:100%;">← Back</button>
   </div>
 </div>
 
-<!-- ══ MODAL ══ -->
-<div id="modal" class="modal-overlay">
+<!-- QUIZ START MODAL -->
+<div id="quiz-modal" class="modal-overlay">
   <div class="modal-box">
-    <div class="modal-icon" id="modal-icon">⚽</div>
-    <h2 class="modal-title">Ready?</h2>
-    <p class="modal-category-name" id="modal-cat-name">PREMIER LEAGUE</p>
-    <div class="modal-xp-preview">
-      <div class="xp-item"><div class="xp-item-val">+10</div><div class="xp-item-label">Per Answer</div></div>
-      <div class="xp-item"><div class="xp-item-val">+5</div><div class="xp-item-label">Streak Bonus</div></div>
-      <div class="xp-item"><div class="xp-item-val">+20</div><div class="xp-item-label">Perfect Score</div></div>
+    <div class="modal-icon" id="qm-icon">🏆</div>
+    <h2 class="modal-title">Ranked Match</h2>
+    <p class="modal-cat" id="qm-cat" style="color:var(--gold);">MIXED · 50 QUESTION POOL</p>
+    <div class="modal-xp-row">
+      <div><div class="xpi-val">+10–20</div><div class="xpi-lbl">Per Answer</div></div>
+      <div><div class="xpi-val">+5</div><div class="xpi-lbl">Streak Bonus</div></div>
+      <div><div class="xpi-val">+30</div><div class="xpi-lbl">Perfect Score</div></div>
     </div>
     <ul class="rules-list">
-      <li><div class="rule-num">1</div>10 questions — easy to impossible difficulty</li>
+      <li><div class="rule-num">1</div>10 random questions from a pool of 50+</li>
       <li><div class="rule-num">2</div>90 seconds total — the clock never stops</li>
-      <li><div class="rule-num">3</div>Each correct answer = 1 point + 10 XP. No partial credit</li>
+      <li><div class="rule-num">3</div>Earn XP · Build streaks · Climb ranks</li>
     </ul>
-    <button class="btn-primary" id="modal-start-btn">Kick Off ⚡</button>
+    <button class="btn-primary" id="qm-start-btn">Kick Off ⚡</button>
     <br><br>
-    <button class="btn-secondary" id="modal-cancel-btn">← Back</button>
+    <button class="btn-secondary" id="qm-cancel-btn">← Back</button>
   </div>
 </div>
 
-<!-- ══ QUIZ SCREEN ══ -->
+<!-- CAREER SELECT MODAL -->
+<div id="career-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon">📋</div>
+    <h2 class="modal-title">Career Path</h2>
+    <p class="modal-cat" style="color:var(--teal);">CHOOSE A FOOTBALLER</p>
+    <p style="font-size:13px;color:var(--grey);margin-bottom:18px;">Answer questions about their full career — early life to legacy. Harder questions as you progress. 3 lives only.</p>
+    <div id="career-footballer-select" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-bottom:18px;"></div>
+    <button class="btn-secondary" id="career-cancel-btn">← Back</button>
+  </div>
+</div>
+
+<!-- WINNERS SELECT MODAL -->
+<div id="winners-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon">🌍</div>
+    <h2 class="modal-title">Name The Winners</h2>
+    <p class="modal-cat" style="color:var(--orange);">CHOOSE YOUR TOURNAMENT</p>
+    <ul class="rules-list">
+      <li><div class="rule-num">1</div>You have 3 minutes to name every winner</li>
+      <li><div class="rule-num">2</div>Type any part of the country/club name</li>
+      <li><div class="rule-num">3</div>Multiple winners per year accepted</li>
+    </ul>
+    <div style="display:flex;gap:10px;margin-bottom:18px;">
+      <button class="btn-primary" id="wm-wc-btn" style="background:var(--orange);color:#fff;">🌍 World Cup</button>
+      <button class="btn-primary" id="wm-ucl-btn" style="background:#3b82f6;color:#fff;">⭐ UCL / Euro Cup</button>
+    </div>
+    <button class="btn-secondary" id="winners-cancel-btn">← Back</button>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN (RANKED) -->
 <div id="quiz-screen" class="screen">
   <div class="quiz-header">
-    <div class="quiz-back" id="quiz-back-btn" role="button" aria-label="Back to categories">←</div>
-    <div class="quiz-meta">
-      <div class="quiz-category-label" id="quiz-cat-label">PREMIER LEAGUE</div>
-      <div class="quiz-progress-text" id="quiz-progress-text">Question 1 of 10</div>
+    <div class="q-back" id="quiz-back-btn">←</div>
+    <div class="q-meta">
+      <div class="q-cat">⚡ RANKED MATCH</div>
+      <div class="q-prog" id="quiz-prog-text">Question 1 of 10</div>
     </div>
-    <div class="streak-badge" id="streak-badge">🔥 <span id="streak-count">0</span>x</div>
-    <div class="score-badge">
-      <span class="score-badge-icon">⚡</span>
-      <span id="score-display">0</span>
-    </div>
+    <div class="streak-pill" id="streak-pill">🔥 <span id="streak-count">0</span>x</div>
+    <div class="score-pill"><span style="font-size:12px;">⚡</span><span id="score-display">0</span></div>
   </div>
-  <div class="progress-bar-wrap">
-    <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
-  </div>
+  <div class="prog-bar-wrap"><div class="prog-bar-fill" id="quiz-prog-bar" style="width:0%"></div></div>
   <div class="timer-row">
-    <span class="timer-icon">⏱</span>
-    <div class="timer-bar-wrap">
-      <div class="timer-bar-fill" id="timer-bar"></div>
-    </div>
-    <span class="timer-count" id="timer-count">90</span>
+    <span style="font-size:14px;">⏱</span>
+    <div class="timer-wrap"><div class="timer-fill" id="timer-fill"></div></div>
+    <span class="timer-num" id="timer-num">90</span>
   </div>
   <div class="quiz-body" id="quiz-body">
-    <div class="difficulty-tag" id="diff-tag">Easy</div>
-    <h2 class="question-text" id="question-text">Loading...</h2>
-    <div class="options-grid" id="options-grid"></div>
+    <div class="diff-tag" id="diff-tag">Easy</div>
+    <h2 class="question-text" id="question-text">Loading…</h2>
+    <div class="opts-grid" id="opts-grid"></div>
     <div class="feedback-box" id="feedback-box">
-      <div class="feedback-label" id="feedback-label">Correct!</div>
-      <div id="feedback-text"></div>
-      <div id="xp-earned-display"></div>
+      <div class="fb-label" id="fb-label">Correct!</div>
+      <div id="fb-text"></div>
+      <div id="xp-display"></div>
     </div>
-    <div class="next-btn-wrap" id="next-wrap">
+    <div class="next-wrap" id="next-wrap">
       <button class="btn-next" id="next-btn">Next →</button>
     </div>
   </div>
 </div>
 
-<!-- ══ TIMEOUT OVERLAY ══ -->
+<!-- TIMEOUT OVERLAY -->
 <div id="timeout-overlay" class="timeout-overlay">
-  <div class="timeout-icon">⏰</div>
-  <div class="timeout-title">TIME'S UP!</div>
-  <div class="timeout-sub">The 90 minutes are over.</div>
-  <button class="btn-primary" id="timeout-results-btn" style="max-width:280px;">See Your Score</button>
+  <div class="to-icon">⏰</div>
+  <div class="to-title">TIME'S UP!</div>
+  <div class="to-sub">The 90 minutes are over.</div>
+  <button class="btn-primary" id="timeout-results-btn" style="max-width:260px;">See Your Score</button>
 </div>
 
-<!-- ══ RESULTS SCREEN ══ -->
+<!-- RESULTS SCREEN -->
 <div id="results-screen" class="screen">
   <div class="results-ring">
     <svg viewBox="0 0 160 160">
       <circle class="ring-bg" cx="80" cy="80" r="70"/>
       <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="70"/>
     </svg>
-    <div class="results-score-inner">
-      <div class="results-score-num" id="results-score-num">0</div>
-      <div class="results-score-denom">out of 10</div>
+    <div class="score-inner">
+      <div class="score-big" id="res-score-num">0</div>
+      <div class="score-denom">out of 10</div>
     </div>
   </div>
   <h2 class="results-grade" id="results-grade">Solid Display</h2>
-  <p class="results-quote" id="results-quote">"Decent. Not special... yet."</p>
-  <p class="results-attribution" id="results-attr">— Jose Mourinho</p>
-  <div class="results-xp-section">
-    <div class="xp-gained-banner">
-      <div class="xp-gained-left">
-        <div class="xp-gained-label">XP Earned</div>
-        <div class="xp-gained-num" id="results-xp-gained">+0</div>
-        <div class="xp-gained-breakdown" id="results-xp-breakdown">0 correct × 10 + 0 bonus</div>
-      </div>
-      <div class="rank-progress-block">
-        <div class="rank-badge-large">
-          <span class="rank-badge-icon-lg" id="results-rank-icon">🥉</span>
-          <span class="rank-badge-name" id="results-rank-name">Bronze</span>
-        </div>
-        <div class="rank-progress-bar-wrap">
-          <div class="rank-progress-bar-fill" id="results-rank-bar" style="width:0%;background:var(--rank-bronze)"></div>
-        </div>
-        <div class="rank-progress-label" id="results-rank-progress-label">0 / 100 XP</div>
-      </div>
+  <p class="results-quote" id="results-quote"></p>
+  <p class="results-attr" id="results-attr"></p>
+  <div class="xp-gained-box" style="animation:fadeUp .5s .6s both">
+    <div class="xgb-left">
+      <div class="xgb-lbl">XP Earned</div>
+      <div class="xgb-num" id="res-xp-num">+0</div>
+      <div class="xgb-breakdown" id="res-xp-breakdown">0 correct</div>
     </div>
-    <div class="rank-up-banner" id="rank-up-banner">🎉 RANK UP! Welcome to <span id="rank-up-name"></span>!</div>
+    <div class="rank-block">
+      <div class="rank-badge-row"><span class="rank-badge-icon" id="res-rank-icon">🥉</span><span class="rank-badge-name" id="res-rank-name">Bronze</span></div>
+      <div class="rank-prog-bar"><div class="rank-prog-fill" id="res-rank-bar" style="width:0%;background:var(--rank-bronze)"></div></div>
+      <div class="rank-prog-lbl" id="res-rank-lbl">0 / 200 XP</div>
+    </div>
   </div>
-  <div class="results-stats">
-    <div class="stat-pill"><div class="stat-num" id="stat-correct">0</div><div class="stat-label">Correct</div></div>
-    <div class="stat-pill"><div class="stat-num" id="stat-wrong">0</div><div class="stat-label">Wrong</div></div>
-    <div class="stat-pill"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">Accuracy</div></div>
-    <div class="stat-pill"><div class="stat-num" id="stat-total-xp">0</div><div class="stat-label">Total XP</div></div>
+  <div class="rank-up-banner" id="rank-up-banner" style="animation:fadeUp .5s .65s both">🎉 RANK UP! Welcome to <span id="rank-up-name"></span>!</div>
+  <div class="stats-row">
+    <div class="stat-pill"><div class="stat-val" id="stat-correct">0</div><div class="stat-lbl">Correct</div></div>
+    <div class="stat-pill"><div class="stat-val" id="stat-wrong">0</div><div class="stat-lbl">Wrong</div></div>
+    <div class="stat-pill"><div class="stat-val" id="stat-pct">0%</div><div class="stat-lbl">Accuracy</div></div>
+    <div class="stat-pill"><div class="stat-val" id="stat-total-xp">0</div><div class="stat-lbl">Total XP</div></div>
   </div>
-  <div class="results-actions">
+  <div class="res-actions">
     <button class="btn-primary" id="retry-btn">Play Again ↺</button>
-    <button class="btn-secondary" id="home-btn">← All Categories</button>
+    <button class="btn-secondary" id="home-btn">← All Modes</button>
   </div>
 </div>
 
-<!-- ══ GUESS THE FOOTBALLER SCREEN ══ -->
+<!-- GUESS THE FOOTBALLER SCREEN -->
 <div id="guess-screen" class="screen">
   <div class="quiz-header">
-    <div class="quiz-back" id="guess-back-btn" role="button">←</div>
-    <div class="quiz-meta">
-      <div class="quiz-category-label" style="color:#a78bfa;">🕵️ GUESS THE FOOTBALLER</div>
-      <div class="quiz-progress-text" id="guess-progress-text">Footballer 1 of 8</div>
+    <div class="q-back" id="guess-back-btn">←</div>
+    <div class="q-meta">
+      <div class="q-cat" style="color:var(--purple);">🕵️ GUESS THE FOOTBALLER</div>
+      <div class="q-prog" id="guess-prog-text">Footballer 1 of 8</div>
     </div>
-    <div class="lives-display" id="lives-display">
-      <span class="life" id="life-0">❤️</span>
-      <span class="life" id="life-1">❤️</span>
-      <span class="life" id="life-2">❤️</span>
-    </div>
-    <div class="score-badge" style="border-color:rgba(167,139,250,0.3);">
-      <span class="score-badge-icon">🃏</span>
+    <div class="lives-row" id="lives-row"></div>
+    <div class="score-pill" style="border-color:rgba(192,132,252,.3);">
+      <span style="font-size:12px;">🃏</span>
       <span id="guess-score-display">0</span>
       <span class="mult-badge" id="mult-badge" style="display:none;">×1</span>
     </div>
   </div>
-  <div class="guess-streak-banner" id="guess-streak-banner">
-    <span id="guess-streak-text">🔥 3× Streak — 1.5× Multiplier!</span>
-  </div>
-
+  <div class="guess-streak-bar" id="guess-streak-bar"><span id="guess-streak-text">🔥 Streak!</span></div>
   <div class="guess-body" id="guess-body">
-    <!-- Clue Cards Stack -->
-    <div class="clue-stage" id="clue-stage">
+    <div>
       <div class="clues-header">
         <div style="display:flex;align-items:center;gap:8px;">
-          <div class="clue-points-badge" id="clue-points-badge">🌟 5 Points</div>
-          <div class="footballer-diff-badge" id="footballer-diff-badge">Easy</div>
+          <div class="clue-pts-badge" id="clue-pts-badge">🌟 5 Points</div>
+          <div class="ft-diff-badge" id="ft-diff-badge">Easy</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <div class="ft-timer" id="ft-timer">
-            <svg class="ft-timer-svg" viewBox="0 0 44 44">
-              <circle class="ft-ring-bg" cx="22" cy="22" r="18"/>
-              <circle class="ft-ring-fill" id="ft-ring-fill" cx="22" cy="22" r="18"/>
+          <div id="ft-timer-wrap" style="position:relative;width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg style="position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);" viewBox="0 0 44 44">
+              <circle style="fill:none;stroke:rgba(255,255,255,.08);stroke-width:3;" cx="22" cy="22" r="18"/>
+              <circle id="ft-ring-fill" style="fill:none;stroke:var(--purple);stroke-width:3;stroke-linecap:round;stroke-dasharray:113.1;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke .3s;" cx="22" cy="22" r="18"/>
             </svg>
-            <div class="ft-timer-num" id="footballer-timer-num">30</div>
+            <span id="ft-timer-num" style="position:relative;z-index:1;font-family:'Black Han Sans',sans-serif;font-size:13px;">30</span>
           </div>
           <div class="clue-counter" id="clue-counter">Clue 1 of 5</div>
         </div>
       </div>
-      <div class="clue-cards-wrap" id="clue-cards-wrap">
-        <!-- Clue cards rendered by JS -->
-      </div>
-      <div class="reveal-clue-btn-wrap">
-        <button class="btn-reveal-clue" id="reveal-clue-btn">👁 Reveal Next Clue (-1 pt)</button>
-      </div>
+      <div id="clue-cards-wrap" style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"></div>
     </div>
-
-    <!-- Answer Input -->
-    <div class="guess-input-section">
-      <div class="guess-options" id="guess-options"></div>
+    <div class="reveal-btn-wrap">
+      <button class="btn-reveal" id="reveal-btn">👁 Reveal Next Clue (-1 pt)</button>
     </div>
-
-    <!-- Feedback -->
-    <div class="guess-feedback" id="guess-feedback" style="display:none;">
-      <div class="guess-feedback-icon" id="guess-feedback-icon">✅</div>
-      <div class="guess-feedback-name" id="guess-feedback-name">Correct!</div>
-      <div class="guess-feedback-detail" id="guess-feedback-detail"></div>
-      <div class="guess-card-reveal" id="guess-card-reveal"></div>
+    <div class="guess-opts" id="guess-opts"></div>
+    <div class="guess-feedback" id="guess-feedback">
+      <div class="gf-icon" id="gf-icon">✅</div>
+      <div class="gf-name" id="gf-name">Correct!</div>
+      <div class="gf-detail" id="gf-detail"></div>
+      <div class="gf-card-reveal" id="gf-card-reveal"></div>
     </div>
-
-    <div class="next-btn-wrap" id="guess-next-wrap" style="display:none;">
+    <div class="next-wrap" id="guess-next-wrap">
       <button class="btn-next" id="guess-next-btn">Next Footballer →</button>
     </div>
   </div>
 </div>
 
-<!-- ══ GUESS GAME OVER OVERLAY ══ -->
-<div id="guess-gameover-overlay" class="guess-gameover-overlay">
-  <div class="gameover-content">
-    <div class="gameover-icon">💀</div>
-    <div class="gameover-title">OUT OF LIVES</div>
-    <div class="gameover-sub">The investigation is over.</div>
-    <button class="btn-primary" id="gameover-results-btn" style="max-width:300px;margin-top:8px;">See Results 🏆</button>
+<!-- GUESS GAME OVER OVERLAY -->
+<div id="guess-gameover" style="position:fixed;inset:0;background:rgba(0,0,0,.93);backdrop-filter:blur(20px);z-index:300;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;gap:14px;">
+  <div style="animation:popIn .4s cubic-bezier(.34,1.56,.64,1) forwards;">
+    <div style="font-size:76px;margin-bottom:14px;">💀</div>
+    <div style="font-family:'Black Han Sans',sans-serif;font-size:50px;color:var(--red);">OUT OF LIVES</div>
+    <div style="color:var(--grey);font-size:15px;margin-bottom:28px;">The investigation is over.</div>
+    <button class="btn-primary" id="guess-gameover-results-btn" style="max-width:280px;">See Results 🏆</button>
   </div>
 </div>
 
-<!-- ══ GUESS RESULTS SCREEN ══ -->
+<!-- GUESS RESULTS SCREEN -->
 <div id="guess-results-screen" class="screen">
-  <div class="guess-results-top">
-    <div class="guess-results-icon">🕵️</div>
-    <h2 class="guess-results-title">Investigation Complete</h2>
-    <div class="guess-results-score-wrap">
-      <div class="guess-results-big-score" id="guess-results-big-score">0</div>
-      <div class="guess-results-score-label" id="guess-results-max-label">/ 40 points</div>
+  <div class="gr-top">
+    <div class="gr-icon">🕵️</div>
+    <h2 class="gr-title">Investigation Complete</h2>
+    <div class="gr-score-wrap">
+      <div class="gr-big" id="gr-big">0</div>
+      <div class="gr-max" id="gr-max">/ 40 pts</div>
     </div>
   </div>
-  <div class="guess-results-grade" id="guess-results-grade">Detective Level: Rookie</div>
-  
-  <!-- New cards unlocked -->
-  <div class="unlocked-cards-section" id="unlocked-cards-section">
-    <div class="unlocked-header">🃏 Cards Unlocked This Round</div>
-    <div class="unlocked-cards-grid" id="unlocked-cards-grid"></div>
+  <div class="gr-grade" id="gr-grade">Detective Level: Rookie</div>
+  <div class="unlocked-section" id="unlocked-section">
+    <div class="unlocked-hdr">🃏 Cards Unlocked This Round</div>
+    <div class="unlocked-grid" id="unlocked-grid"></div>
   </div>
-
-  <div class="xp-gained-banner" style="max-width:440px;margin:0 auto 24px;">
-    <div class="xp-gained-left">
-      <div class="xp-gained-label">XP Earned</div>
-      <div class="xp-gained-num" id="guess-results-xp">+0</div>
+  <div class="xp-gained-box" style="max-width:440px;margin:0 auto 22px;">
+    <div class="xgb-left">
+      <div class="xgb-lbl">XP Earned</div>
+      <div class="xgb-num" id="gr-xp">+0</div>
     </div>
-    <div class="rank-progress-block">
-      <div class="rank-badge-large">
-        <span class="rank-badge-icon-lg" id="guess-results-rank-icon">🥉</span>
-        <span class="rank-badge-name" id="guess-results-rank-name">Bronze</span>
-      </div>
+    <div class="rank-block">
+      <div class="rank-badge-row"><span class="rank-badge-icon" id="gr-rank-icon">🥉</span><span class="rank-badge-name" id="gr-rank-name">Bronze</span></div>
     </div>
   </div>
   <div class="rank-up-banner" id="guess-rank-up-banner">🎉 RANK UP! Welcome to <span id="guess-rank-up-name"></span>!</div>
-
-  <div class="results-actions" style="margin-top:16px;">
-    <button class="btn-primary" id="guess-retry-btn">Play Again ↺</button>
-    <button class="btn-secondary" id="guess-home-btn">← All Categories</button>
-    <button class="btn-secondary" id="guess-collection-btn" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;">🃏 View Collection</button>
+  <div class="res-actions" style="margin-top:16px;">
+    <button class="btn-primary" id="gr-retry-btn">Play Again ↺</button>
+    <button class="btn-secondary" id="gr-home-btn">← All Modes</button>
+    <button class="btn-secondary" id="gr-col-btn" style="border-color:rgba(192,132,252,.4);color:var(--purple);">🃏 View Collection</button>
   </div>
 </div>
 
-<!-- ══ COLLECTABLES SCREEN ══ -->
-<div id="collectables-screen" class="screen">
-  <div class="collectables-header">
-    <button class="quiz-back" id="collectables-back-btn" style="position:absolute;left:20px;">←</button>
-    <h2>🃏 Card Collection</h2>
-    <p id="collection-count-label">0 / 30 Collected</p>
+<!-- CAREER PATH SCREEN -->
+<div id="career-screen" class="screen">
+  <div class="quiz-header">
+    <div class="q-back" id="career-back-btn">←</div>
+    <div class="q-meta">
+      <div class="q-cat" style="color:var(--teal);">📋 CAREER PATH</div>
+      <div class="q-prog" id="career-prog-text">Phase 1: Early Life</div>
+    </div>
+    <div class="lives-row" id="career-lives-row"></div>
+    <div class="score-pill" style="border-color:rgba(0,229,255,.3);">
+      <span style="font-size:12px;">⚡</span>
+      <span id="career-score-display">0</span>
+    </div>
   </div>
-  <div class="collection-filters" id="collection-filters">
-    <button class="filter-btn active" data-rarity="all">All</button>
-    <button class="filter-btn" data-rarity="bronze">Bronze</button>
-    <button class="filter-btn" data-rarity="silver">Silver</button>
-    <button class="filter-btn" data-rarity="gold">Gold</button>
-    <button class="filter-btn" data-rarity="legend">Legend</button>
+  <div class="prog-bar-wrap"><div class="prog-bar-fill" id="career-prog-bar" style="width:0%;background:var(--teal)"></div></div>
+  <div class="career-body" id="career-body">
+    <!-- career footballer card -->
+    <div class="career-footballer-card" id="career-fc-card">
+      <div class="cfc-emoji" id="career-fc-emoji">🇧🇷</div>
+      <div>
+        <div class="cfc-name" id="career-fc-name">Pelé</div>
+        <div class="cfc-sub" id="career-fc-sub">5 phases · 15 questions</div>
+      </div>
+      <div style="margin-left:auto;text-align:right;">
+        <div id="career-phase-badge" class="career-phase-badge">Phase 1</div>
+      </div>
+    </div>
+    <div class="ch-progress">
+      <div class="ch-prog-bar"><div class="ch-prog-fill" id="ch-prog-fill" style="width:0%"></div></div>
+      <div class="ch-prog-lbl" id="ch-prog-lbl">0 / 15</div>
+    </div>
+    <div class="cq-diff" id="cq-diff">Beginner</div>
+    <h2 class="career-question-text" id="career-q-text">Loading…</h2>
+    <div class="career-opts" id="career-opts"></div>
+    <div class="career-fb" id="career-fb">
+      <div class="career-fb-lbl" id="career-fb-lbl">Correct!</div>
+      <div id="career-fb-text"></div>
+      <div id="career-xp-display"></div>
+    </div>
+    <div class="next-wrap" id="career-next-wrap">
+      <button class="btn-next" id="career-next-btn">Next →</button>
+    </div>
   </div>
-  <div class="collection-grid" id="collection-grid"></div>
 </div>
 
-<!-- ══ LEADERBOARD SCREEN ══ -->
+<!-- CAREER GAME OVER OVERLAY -->
+<div class="career-gameover" id="career-gameover">
+  <div style="animation:popIn .4s cubic-bezier(.34,1.56,.64,1) forwards;">
+    <div style="font-size:72px;margin-bottom:14px;">💔</div>
+    <div style="font-family:'Black Han Sans',sans-serif;font-size:46px;color:var(--red);margin-bottom:8px;">CAREER ENDED</div>
+    <div style="color:var(--grey);font-size:15px;margin-bottom:28px;">You ran out of lives on <span id="career-over-name" style="color:var(--teal);">Pelé</span>'s career</div>
+    <button class="btn-primary" id="career-gameover-results-btn" style="max-width:280px;">See Results 🏆</button>
+  </div>
+</div>
+
+<!-- CAREER RESULTS SCREEN -->
+<div id="career-results-screen" class="screen career-results">
+  <div style="animation:fadeUp .5s both;text-align:center;width:100%;max-width:500px;margin-bottom:24px;">
+    <div style="font-size:52px;margin-bottom:10px;">📋</div>
+    <h2 style="font-family:'Black Han Sans',sans-serif;font-size:38px;margin-bottom:8px;">Career Complete</h2>
+    <div style="font-family:'Black Han Sans',sans-serif;font-size:60px;color:var(--teal);line-height:1;" id="cr-score-big">0</div>
+    <div style="font-size:14px;color:var(--grey);margin-bottom:6px;">/ 15 questions answered correctly</div>
+    <div style="font-size:16px;color:var(--grey);margin-bottom:22px;" id="cr-grade">Career Rookie</div>
+  </div>
+  <div class="xp-gained-box" style="max-width:440px;margin:0 auto 16px;">
+    <div class="xgb-left">
+      <div class="xgb-lbl">XP Earned</div>
+      <div class="xgb-num" id="cr-xp">+0</div>
+    </div>
+    <div class="rank-block">
+      <div class="rank-badge-row"><span class="rank-badge-icon" id="cr-rank-icon">🥉</span><span class="rank-badge-name" id="cr-rank-name">Bronze</span></div>
+    </div>
+  </div>
+  <div class="rank-up-banner" id="career-rank-up-banner">🎉 RANK UP! Welcome to <span id="career-rank-up-name"></span>!</div>
+  <div class="res-actions" style="margin-top:16px;">
+    <button class="btn-primary" id="cr-retry-btn">Try Again ↺</button>
+    <button class="btn-secondary" id="cr-home-btn">← All Modes</button>
+  </div>
+</div>
+
+<!-- NAME ALL WINNERS SCREEN -->
+<div id="winners-screen" class="screen">
+  <div class="quiz-header">
+    <div class="q-back" id="winners-back-btn">←</div>
+    <div class="q-meta">
+      <div class="q-cat" style="color:var(--orange);">🌍 NAME THE WINNERS</div>
+      <div class="q-prog" id="winners-prog-text">0 / 22 found</div>
+    </div>
+    <div class="score-pill" style="border-color:rgba(255,109,0,.3);">
+      <span style="font-size:12px;">🏆</span>
+      <span id="winners-score">0</span>
+    </div>
+  </div>
+  <div class="winners-body">
+    <div class="winners-header-info">
+      <div class="whi-left">
+        <div class="wh-title" id="wh-title">🌍 FIFA World Cup Winners</div>
+        <div class="wh-sub">Name every winner — type country or club name</div>
+      </div>
+      <div class="wh-timer">
+        <svg viewBox="0 0 60 60">
+          <circle class="wh-ring-bg" cx="30" cy="30" r="26"/>
+          <circle class="wh-ring-fill" id="wh-ring-fill" cx="30" cy="30" r="26"/>
+        </svg>
+        <span class="wh-timer-num" id="wh-timer-num">3:00</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="progress-label">Found: <span id="winners-found-count">0</span> / <span id="winners-total-count">22</span></div>
+      <div class="hint-feed" id="hint-feed"></div>
+    </div>
+    <div class="winners-input-area">
+      <input type="text" class="w-input" id="winners-input" placeholder="Type a winner…" autocomplete="off" autocorrect="off" spellcheck="false"/>
+      <button class="w-submit" id="winners-submit-btn">Submit</button>
+    </div>
+    <div class="winners-grid" id="winners-grid"></div>
+  </div>
+</div>
+
+<!-- WINNERS GAME OVER OVERLAY -->
+<div class="winners-gameover" id="winners-gameover">
+  <div style="animation:popIn .4s cubic-bezier(.34,1.56,.64,1) forwards;max-width:400px;width:100%;">
+    <div style="font-size:64px;margin-bottom:14px;">⏰</div>
+    <div style="font-family:'Black Han Sans',sans-serif;font-size:46px;color:var(--orange);margin-bottom:8px;">TIME'S UP!</div>
+    <div style="color:var(--grey);font-size:15px;margin-bottom:8px;">You named <span id="wo-found" style="color:var(--orange);font-weight:700;">0</span> out of <span id="wo-total" style="color:var(--white);">22</span></div>
+    <div style="color:var(--grey);font-size:13px;margin-bottom:28px;">Missed: <span id="wo-missed" style="color:var(--red);">all</span></div>
+    <div class="xp-gained-box" style="margin-bottom:16px;text-align:left;">
+      <div class="xgb-left"><div class="xgb-lbl">XP Earned</div><div class="xgb-num" id="wo-xp">+0</div></div>
+      <div class="rank-block"><div class="rank-badge-row"><span class="rank-badge-icon" id="wo-rank-icon">🥉</span><span class="rank-badge-name" id="wo-rank-name">Bronze</span></div></div>
+    </div>
+    <div class="rank-up-banner" id="winners-rank-up-banner" style="margin-bottom:16px;">🎉 RANK UP! Welcome to <span id="winners-rank-up-name"></span>!</div>
+    <div style="display:flex;gap:10px;flex-direction:column;">
+      <button class="btn-primary" id="wo-retry-btn">Play Again ↺</button>
+      <button class="btn-secondary" id="wo-home-btn">← All Modes</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD SCREEN -->
 <div id="leaderboard-screen" class="screen">
-  <div class="leaderboard-header">
-    <h2>🏆 Leaderboard</h2>
-    <p>Top players by total XP earned</p>
-  </div>
-  <div class="leaderboard-table" id="leaderboard-table"></div>
-  <button class="btn-secondary leaderboard-back-btn" id="leaderboard-back-btn">← Back to Home</button>
+  <div class="lb-hdr"><h2>🏆 Leaderboard</h2><p>Top players by total XP</p></div>
+  <div class="lb-table" id="lb-table"></div>
+  <button class="btn-secondary" id="lb-back-btn">← Back</button>
 </div>
 
-<!-- ══ CARD DETAIL MODAL ══ -->
+<!-- COLLECTABLES SCREEN -->
+<div id="collectables-screen" class="screen">
+  <div class="col-hdr">
+    <button class="q-back" id="col-back-btn" style="position:absolute;left:16px;top:16px;">←</button>
+    <h2>🃏 Card Collection</h2>
+    <p id="col-count-lbl">0 / 50 Collected</p>
+  </div>
+  <div class="col-filters" id="col-filters">
+    <button class="col-filter active" data-rarity="all">All</button>
+    <button class="col-filter" data-rarity="bronze">Bronze</button>
+    <button class="col-filter" data-rarity="silver">Silver</button>
+    <button class="col-filter" data-rarity="gold">Gold</button>
+    <button class="col-filter" data-rarity="legend">Legend</button>
+  </div>
+  <div class="col-grid" id="col-grid"></div>
+</div>
+
+<!-- CARD DETAIL MODAL -->
 <div id="card-detail-modal" class="modal-overlay">
-  <div class="card-detail-box" id="card-detail-box">
-    <!-- filled by JS -->
-  </div>
+  <div class="card-detail-box" id="card-detail-box"></div>
 </div>
 
-<script src="script.js"></script>
+
+
 </body>
 </html>
