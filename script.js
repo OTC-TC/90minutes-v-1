@@ -184,7 +184,17 @@ const FOOTBALLER_CARDS = [
    clues:[{cat:'Nation',text:'I am from Cameroon and the most decorated African footballer of my generation.'},{cat:'Africa',text:'I won the African Footballer of the Year award four times.'},{cat:'Barcelona',text:'I won the treble with FC Barcelona in 2009 under Pep Guardiola.'},{cat:'Inter',text:'I won the treble with Inter Milan just a year later under Mourinho — unique achievement.'},{cat:'Goals',text:'I scored 18+ goals in four consecutive Champions League seasons.'}],
    options:["Samuel Eto'o","Didier Drogba","Michael Essien","Yaya Touré"]},
 ];
+// Randomise options + store correct index
+FOOTBALLER_CARDS.forEach(card => {
+  const correctAnswer = card.name;
 
+  for (let i = card.options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [card.options[i], card.options[j]] = [card.options[j], card.options[i]];
+  }
+
+  card.correctIndex = card.options.indexOf(correctAnswer);
+});
 // ════════════════════════════════════════════
 // 50 RANKED QUESTIONS
 // ════════════════════════════════════════════
