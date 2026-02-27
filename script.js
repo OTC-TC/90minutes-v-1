@@ -1,744 +1,1155 @@
-:root {
-  --pitch: #060e1a;
-  --pitch-mid: #0b1829;
-  --pitch-card: rgba(255,255,255,0.04);
-  --pitch-border: rgba(255,255,255,0.07);
-  --green: #00e676;
-  --green-dim: rgba(0,230,118,0.12);
-  --red: #ff3d57;
-  --gold: #ffc400;
-  --gold-dim: rgba(255,196,0,0.12);
-  --purple: #c084fc;
-  --purple-dim: rgba(192,132,252,0.12);
-  --teal: #00e5ff;
-  --orange: #ff6d00;
-  --white: #f0f4ff;
-  --grey: #6b7a90;
-  --radius: 14px;
-  --t: 0.22s cubic-bezier(0.4,0,0.2,1);
-
-  --rank-bronze: #cd7f32;
-  --rank-silver: #b8c0cc;
-  --rank-gold: #ffc400;
-  --rank-platinum: #7dd3fc;
-  --rank-diamond: #a5f3fc;
-  --rank-legend: #ff6b6b;
-  --rank-icon: #ff6b6b;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{
-  font-family:'Barlow',sans-serif;
-  background:var(--pitch);
-  color:var(--white);
-  min-height:100dvh;
-  overflow-x:hidden;
-  position:relative;
+// ════════════════════════════════════════════
+// RANK SYSTEM
+// ════════════════════════════════════════════
+const RANKS = [
+  { name:'Bronze',   icon:'🥉', color:'#cd7f32', minXP:0,    maxXP:199 },
+  { name:'Silver',   icon:'🥈', color:'#b8c0cc', minXP:200,  maxXP:599 },
+  { name:'Gold',     icon:'🥇', color:'#ffc400', minXP:600,  maxXP:1199 },
+  { name:'Platinum', icon:'💎', color:'#7dd3fc', minXP:1200, maxXP:2199 },
+  { name:'Diamond',  icon:'💠', color:'#a5f3fc', minXP:2200, maxXP:3999 },
+  { name:'Legend',   icon:'👑', color:'#ff6b6b', minXP:4000, maxXP:Infinity }
+];
+function getRank(xp){ for(let i=RANKS.length-1;i>=0;i--) if(xp>=RANKS[i].minXP) return RANKS[i]; return RANKS[0]; }
+function getRankProgress(xp){
+  const r=getRank(xp);
+  if(r.maxXP===Infinity) return {pct:100,current:xp-r.minXP,needed:0};
+  const p=xp-r.minXP, t=r.maxXP-r.minXP+1;
+  return {pct:Math.min(100,Math.round(p/t*100)),current:p,needed:t-p};
 }
 
-/* Ambient background */
-body::before{
-  content:'';position:fixed;inset:0;
-  background:
-    radial-gradient(ellipse 120% 50% at 50% -10%,rgba(0,230,118,0.055) 0%,transparent 65%),
-    radial-gradient(ellipse 60% 60% at 80% 80%,rgba(192,132,252,0.04) 0%,transparent 60%),
-    radial-gradient(ellipse 40% 40% at 20% 60%,rgba(255,196,0,0.03) 0%,transparent 60%);
-  pointer-events:none;z-index:0;
+// ════════════════════════════════════════════
+// PLAYER DATA
+// ════════════════════════════════════════════
+let pd={name:'',xp:0,gamesPlayed:0,bestScore:0,unlockedCards:[]};
+function loadPD(){try{const s=localStorage.getItem('90m_v2');if(s){const p=JSON.parse(s);pd={...pd,...p};if(!pd.unlockedCards)pd.unlockedCards=[];}}catch(e){}}
+function savePD(){try{localStorage.setItem('90m_v2',JSON.stringify(pd));}catch(e){}}
+function saveLB(){
+  try{
+    const lb=JSON.parse(localStorage.getItem('90m_lb_v2')||'[]');
+    const idx=lb.findIndex(p=>p.name===pd.name);
+    const e={name:pd.name,xp:pd.xp,gamesPlayed:pd.gamesPlayed,bestScore:pd.bestScore};
+    if(idx>=0) lb[idx]=e; else lb.push(e);
+    lb.sort((a,b)=>b.xp-a.xp);
+    localStorage.setItem('90m_lb_v2',JSON.stringify(lb.slice(0,20)));
+  }catch(e){}
 }
-body::after{
-  content:'';position:fixed;inset:0;
-  background-image:linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);
-  background-size:50px 50px;
-  pointer-events:none;z-index:0;
-}
-
-.screen{
-  position:relative;z-index:1;
-  min-height:100dvh;
-  display:none;flex-direction:column;
-  align-items:center;
-}
-.screen.active{display:flex;}
-
-/* ══ TOP BAR ══ */
-.top-bar{
-  position:fixed;top:0;left:0;right:0;
-  padding:10px 18px;
-  display:flex;justify-content:space-between;align-items:center;
-  z-index:50;
-  background:linear-gradient(to bottom,rgba(6,14,26,0.97) 70%,transparent);
-}
-.rank-pill{
-  display:flex;align-items:center;gap:8px;
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  border-radius:100px;padding:7px 14px;cursor:pointer;
-  transition:var(--t);
-}
-.rank-pill:hover{background:rgba(255,255,255,0.08);}
-.rank-pill .rxp{font-size:11px;color:var(--grey);}
-.top-bar-btns{display:flex;gap:8px;}
-.tb-btn{
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  border-radius:100px;padding:7px 14px;
-  font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
-  cursor:pointer;transition:var(--t);color:var(--grey);
-}
-.tb-btn:hover{background:rgba(255,255,255,0.08);color:var(--white);}
-.tb-btn.gold{border-color:rgba(255,196,0,0.3);color:var(--gold);}
-.tb-btn.gold:hover{background:var(--gold-dim);}
-.tb-btn.purple{border-color:rgba(192,132,252,0.3);color:var(--purple);}
-.tb-btn.purple:hover{background:var(--purple-dim);}
-
-/* ══ HOME ══ */
-#home-screen{justify-content:center;padding:24px 16px;gap:0;}
-.home-eyebrow{
-  font-size:10px;letter-spacing:5px;text-transform:uppercase;
-  color:var(--green);font-weight:700;
-  margin-top:64px;margin-bottom:12px;
-  opacity:0;animation:fadeUp .5s .1s forwards;
-}
-.home-title{
-  font-family:'Black Han Sans',sans-serif;
-  font-size:clamp(60px,13vw,130px);
-  line-height:.88;text-align:center;letter-spacing:-1px;
-  margin-bottom:20px;
-  opacity:0;animation:fadeUp .6s .25s forwards;
-}
-.home-title span{color:var(--green);display:block;}
-.home-sub{
-  font-size:15px;color:var(--grey);text-align:center;
-  max-width:380px;line-height:1.6;margin-bottom:40px;
-  opacity:0;animation:fadeUp .6s .4s forwards;
+function getLB(){try{return JSON.parse(localStorage.getItem('90m_lb_v2')||'[]');}catch(e){return [];}}
+function updateHomeRank(){
+  const r=getRank(pd.xp);
+  document.getElementById('home-rank-icon').textContent=r.icon;
+  document.getElementById('home-rank-name').textContent=r.name;
+  document.getElementById('home-rank-xp').textContent=pd.xp+' XP';
 }
 
-.mode-grid{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:12px;width:100%;max-width:680px;
-  opacity:0;animation:fadeUp .6s .55s forwards;
+// ════════════════════════════════════════════
+// 50 FOOTBALLER CARDS
+// ════════════════════════════════════════════
+const FOOTBALLER_CARDS = [
+  {id:'pele',name:'Pelé',emoji:'🇧🇷',nation:'Brazil',rarity:'legend',type:'player',stats:{goals:770,trophies:3,era:'58-77'},bio:'The king of football. Won three World Cups and scored over 1,000 career goals.',
+   clues:[{cat:'Birthplace',text:'I was born in Três Corações, Brazil in 1940.'},{cat:'Club',text:'I spent most of my career at Santos FC in Brazil.'},{cat:'World Cup',text:'I won the FIFA World Cup three times with Brazil.'},{cat:'Record',text:'I scored over 1,000 career goals — a feat never matched.'},{cat:'Legacy',text:'FIFA named me "Player of the Century" alongside Maradona.'}],
+   options:['Pelé','Garrincha','Zico','Romário']},
+  {id:'maradona',name:'Diego Maradona',emoji:'🇦🇷',nation:'Argentina',rarity:'legend',type:'player',stats:{goals:312,trophies:5,era:'76-97'},bio:'Author of the Hand of God. Led Argentina to the 1986 World Cup.',
+   clues:[{cat:'Birthplace',text:'I was born in Buenos Aires, Argentina in 1960.'},{cat:'Club',text:'I played for Napoli, winning two Serie A titles.'},{cat:'World Cup',text:'I captained Argentina to glory in 1986 in Mexico.'},{cat:'Infamous',text:'I scored two goals against England in 1986 — one with my hand.'},{cat:'Legacy',text:'I was named FIFA Player of the 20th Century alongside Pelé.'}],
+   options:['Diego Maradona','Gabriel Batistuta','Mario Kempes','Hernán Crespo']},
+  {id:'cruyff',name:'Johan Cruyff',emoji:'🇳🇱',nation:'Netherlands',rarity:'legend',type:'player',stats:{goals:284,trophies:9,era:'64-84'},bio:"Architect of Total Football. Won three Ballon d'Or awards. Created the Cruyff Turn.",
+   clues:[{cat:'Birthplace',text:'I was born in Amsterdam, Netherlands in 1947.'},{cat:'Club',text:'I dominated with Ajax and later FC Barcelona.'},{cat:'Philosophy',text:'I embodied "Total Football" — every player can play any position.'},{cat:'Skill',text:'I invented a famous reverse dribbling turn named after me.'},{cat:'Manager',text:"As Barcelona's manager I created the legendary \"Dream Team\"."}],
+   options:['Johan Cruyff','Marco van Basten','Dennis Bergkamp','Ruud Gullit']},
+  {id:'beckenbauer',name:'Franz Beckenbauer',emoji:'🇩🇪',nation:'Germany',rarity:'legend',type:'player',stats:{goals:95,trophies:8,era:'64-83'},bio:'Der Kaiser. Won the World Cup as both player (1974) and manager (1990).',
+   clues:[{cat:'Nickname',text:'I was known as "Der Kaiser" — The Emperor of German football.'},{cat:'Club',text:'I was captain of Bayern Munich for over a decade.'},{cat:'Position',text:'I revolutionised the sweeper (libero) role, attacking from defence.'},{cat:'World Cup',text:'I won the 1974 World Cup as captain of West Germany.'},{cat:'Manager',text:'I am one of only three men to win the World Cup as player AND manager.'}],
+   options:['Franz Beckenbauer','Gerd Müller','Karl-Heinz Rummenigge','Sepp Maier']},
+  {id:'ronaldo_r9',name:'Ronaldo R9',emoji:'🇧🇷',nation:'Brazil',rarity:'legend',type:'player',stats:{goals:352,trophies:5,era:'93-2011'},bio:'Two-time Ballon d\'Or. Two-time World Cup champion. "O Fenômeno".',
+   clues:[{cat:'Birthplace',text:'I was born in Rio de Janeiro, Brazil in 1976.'},{cat:'Clubs',text:'I played for Barcelona, Inter Milan, and Real Madrid.'},{cat:'Awards',text:'I won the Ballon d\'Or twice (1997, 2002).'},{cat:'World Cup',text:'I was top scorer at both the 1998 and 2002 World Cups.'},{cat:'Nickname',text:'I was nicknamed "O Fenômeno" — The Phenomenon.'}],
+   options:['Ronaldo R9','Rivaldo','Ronaldinho','Roberto Carlos']},
+  {id:'ferguson',name:'Sir Alex Ferguson',emoji:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',nation:'Scotland',rarity:'legend',type:'manager',stats:{goals:13,trophies:49,era:'74-2013'},bio:'Greatest manager in history. 13 Premier League titles with Manchester United.',
+   clues:[{cat:'Birthplace',text:'I was born in Govan, Glasgow, Scotland in 1941.'},{cat:'Before United',text:'I managed Aberdeen before taking over Manchester United in 1986.'},{cat:'Titles',text:'I won 13 Premier League titles and 2 Champions Leagues with Manchester United.'},{cat:'Treble',text:'I won the historic treble in 1999 with a late comeback in Barcelona.'},{cat:'Legacy',text:'A clock at Old Trafford reads "Fergie Time" — tribute to my team\'s late goals.'}],
+   options:['Sir Alex Ferguson','Brian Clough','Bob Paisley','Bill Shankly']},
+  {id:'messi',name:'Lionel Messi',emoji:'🇦🇷',nation:'Argentina',rarity:'gold',type:'player',stats:{goals:850,trophies:44,era:'2004-'},bio:'8-time Ballon d\'Or. 2022 World Cup winner. La Liga all-time top scorer.',
+   clues:[{cat:'Birthplace',text:'I was born in Rosario, Argentina in 1987.'},{cat:'Club',text:'I spent the majority of my career at FC Barcelona from age 13.'},{cat:'Awards',text:'I have won the Ballon d\'Or a record 8 times.'},{cat:'World Cup',text:'I finally won the FIFA World Cup in 2022 in Qatar.'},{cat:'Current',text:'I currently play for Inter Miami in Major League Soccer.'}],
+   options:['Lionel Messi','Sergio Agüero','Angel Di Maria','Gonzalo Higuain']},
+  {id:'ronaldo_cr7',name:'Cristiano Ronaldo',emoji:'🇵🇹',nation:'Portugal',rarity:'gold',type:'player',stats:{goals:900,trophies:34,era:'2002-'},bio:'5-time Ballon d\'Or. All-time top scorer in Champions League and international football.',
+   clues:[{cat:'Birthplace',text:'I was born in Funchal, Madeira, Portugal in 1985.'},{cat:'Clubs',text:'I have played for Sporting CP, Man United, Real Madrid, Juventus, and Al Nassr.'},{cat:'Record',text:'I am all-time top scorer in both the Champions League and international football.'},{cat:'Number',text:'My iconic shirt number is #7 — worn at every major club.'},{cat:'Nickname',text:'My worldwide nickname is "CR7".'}],
+   options:['Cristiano Ronaldo','Luis Figo','Eusébio','Rui Costa']},
+  {id:'zidane',name:'Zinedine Zidane',emoji:'🇫🇷',nation:'France',rarity:'gold',type:'player',stats:{goals:125,trophies:15,era:'89-2006'},bio:'1998 World Cup hero. Elegant maestro who won three Ballon d\'Or awards.',
+   clues:[{cat:'Birthplace',text:'I was born in Marseille, France to Algerian parents in 1972.'},{cat:'Clubs',text:'I played for Cannes, Bordeaux, Juventus, and Real Madrid.'},{cat:'World Cup',text:'I scored twice in the 1998 World Cup final to win the trophy for France.'},{cat:'Infamous',text:'My final act in football was a headbutt on Materazzi in the 2006 World Cup final.'},{cat:'Manager',text:'I managed Real Madrid to three consecutive Champions League titles.'}],
+   options:['Zinedine Zidane','Thierry Henry','Patrick Vieira','David Trezeguet']},
+  {id:'ronaldinho',name:'Ronaldinho',emoji:'🇧🇷',nation:'Brazil',rarity:'gold',type:'player',stats:{goals:282,trophies:14,era:'98-2015'},bio:'The most naturally gifted of his generation. Made football look like art.',
+   clues:[{cat:'Birthplace',text:'I was born in Porto Alegre, Brazil in 1980.'},{cat:'Club',text:'My greatest years were at Barcelona, winning back-to-back Liga titles.'},{cat:'Awards',text:'I won the Ballon d\'Or in 2005 and the World Cup in 2002.'},{cat:'Style',text:'I was famous for flicks, elasticos, and no-look passes. Football was my joy.'},{cat:'Standing ovation',text:'Even Real Madrid fans gave me a standing ovation at the Bernabéu in 2005.'}],
+   options:['Ronaldinho','Robinho','Rivaldo','Kaká']},
+  {id:'henry',name:'Thierry Henry',emoji:'🇫🇷',nation:'France',rarity:'gold',type:'player',stats:{goals:411,trophies:11,era:'94-2012'},bio:"Arsenal's all-time top scorer. Part of the \"Invincibles\". Elegant and lethal.",
+   clues:[{cat:'Birthplace',text:'I was born in Les Ulis, France in 1977.'},{cat:'Club',text:'I am the all-time top scorer for Arsenal Football Club.'},{cat:'Achievement',text:'I went an entire Premier League season unbeaten with Arsenal in 2003-04.'},{cat:'Infamous',text:'I handled the ball in the 2010 World Cup play-off against Ireland.'},{cat:'Manager',text:'I managed the Canadian national team after retiring.'}],
+   options:['Thierry Henry','Nicolas Anelka','Robert Pirès','Sylvain Wiltord']},
+  {id:'mourinho',name:'José Mourinho',emoji:'🇵🇹',nation:'Portugal',rarity:'gold',type:'manager',stats:{goals:2,trophies:26,era:'2000-'},bio:'"The Special One." Won the Champions League with Porto and Inter. Master of mind games.',
+   clues:[{cat:'Birthplace',text:'I was born in Setúbal, Portugal in 1963.'},{cat:'Porto',text:'I won the Champions League with FC Porto in 2004 — considered a massive upset.'},{cat:'Title',text:'I named myself "The Special One" at my very first Chelsea press conference.'},{cat:'Clubs',text:'I have managed Porto, Chelsea, Inter, Real Madrid, Man United, Spurs, Roma, Fenerbahçe.'},{cat:'Style',text:'I am renowned for defensive tactics, meticulous preparation, and mind games.'}],
+   options:['José Mourinho','Carlo Ancelotti','Claudio Ranieri','Roberto Mancini']},
+  {id:'guardiola',name:'Pep Guardiola',emoji:'🇪🇸',nation:'Spain',rarity:'gold',type:'manager',stats:{goals:11,trophies:38,era:'2007-'},bio:'Greatest tactical innovator in modern football. Created tiki-taka at Barcelona.',
+   clues:[{cat:'Birthplace',text:'I was born in Santpedor, Catalonia, Spain in 1971.'},{cat:'Player',text:"As a player, I was central midfielder in Cruyff's Barcelona Dream Team."},{cat:'Achievement',text:'I won the historic treble with Barcelona in 2009 and repeated it in 2011.'},{cat:'City',text:'I joined Manchester City in 2016 and won 6 Premier Leagues in 8 seasons.'},{cat:'Invention',text:'I invented the "False 9" position and perfected positional play (juego de posición).'}],
+   options:['Pep Guardiola','Mikel Arteta','Ernesto Valverde','Luis Enrique']},
+  {id:'haaland',name:'Erling Haaland',emoji:'🇳🇴',nation:'Norway',rarity:'silver',type:'player',stats:{goals:290,trophies:8,era:'2016-'},bio:'Most lethal striker of his generation. Broke Premier League goals record in debut season.',
+   clues:[{cat:'Birthplace',text:'I was born in Leeds, England but represent Norway internationally.'},{cat:'Club',text:'I joined Manchester City from Borussia Dortmund in 2022.'},{cat:'Record',text:'I scored 36 Premier League goals in my debut season — breaking the all-time record.'},{cat:'Father',text:'My father Alfie Haaland also played in the Premier League.'},{cat:'Style',text:'I am known for my incredible pace, clinical finishing, and ice-cold composure.'}],
+   options:['Erling Haaland','Alexander Sörloth','Martin Ødegaard','Joshua King']},
+  {id:'mbappe',name:'Kylian Mbappé',emoji:'🇫🇷',nation:'France',rarity:'silver',type:'player',stats:{goals:340,trophies:15,era:'2015-'},bio:'Fastest player in football. 2018 World Cup winner. Joined Real Madrid in 2024.',
+   clues:[{cat:'Birthplace',text:'I was born in Paris in 1998 to a Cameroonian father and Algerian mother.'},{cat:'Clubs',text:'I played for Monaco and PSG before moving to Real Madrid in 2024.'},{cat:'World Cup',text:'I won the 2018 World Cup with France, scoring in the final aged just 19.'},{cat:'Speed',text:'I have been recorded as the fastest player in football at over 38 km/h.'},{cat:'Pelé quote',text:'Pelé once said I was the most exciting young player since himself.'}],
+   options:['Kylian Mbappé','Ousmane Dembélé','Antoine Griezmann','Kingsley Coman']},
+  {id:'buffon',name:'Gianluigi Buffon',emoji:'🇮🇹',nation:'Italy',rarity:'silver',type:'player',stats:{goals:0,trophies:26,era:'95-2023'},bio:'Greatest goalkeeper of all time. Served Juventus for over two decades.',
+   clues:[{cat:'Birthplace',text:'I was born in Carrara, Italy in 1978.'},{cat:'Club',text:'I am synonymous with Juventus, where I played for over two decades.'},{cat:'World Cup',text:'I won the 2006 World Cup with Italy, conceding only 2 goals.'},{cat:'Record',text:'I hold the record for most Champions League appearances by a goalkeeper.'},{cat:'Number',text:'My number 1 shirt was retired by Parma in my honour.'}],
+   options:['Gianluigi Buffon','Dino Zoff','Angelo Peruzzi','Sebastiano Rossi']},
+  {id:'iniesta',name:'Andrés Iniesta',emoji:'🇪🇸',nation:'Spain',rarity:'silver',type:'player',stats:{goals:93,trophies:35,era:'2002-2023'},bio:"Scored the 2010 World Cup winning goal. Engine of Barcelona's golden era.",
+   clues:[{cat:'Birthplace',text:'I was born in Fuentealbilla, Spain in 1984.'},{cat:'Club',text:"I spent my entire Spanish career at FC Barcelona — La Masia's finest product."},{cat:'World Cup',text:'I scored the winning goal in the 2010 FIFA World Cup final in extra time.'},{cat:'Style',text:'I was known for calmness under pressure, vision, and navigating tight spaces.'},{cat:'Japan',text:'I played my final years for Vissel Kobe in Japan before retiring.'}],
+   options:['Andrés Iniesta','Xavi Hernández','David Silva','Cesc Fàbregas']},
+  {id:'van_basten',name:'Marco van Basten',emoji:'🇳🇱',nation:'Netherlands',rarity:'silver',type:'player',stats:{goals:301,trophies:11,era:'81-95'},bio:'Three-time Ballon d\'Or. Scored one of the greatest goals ever in Euro 1988.',
+   clues:[{cat:'Birthplace',text:'I was born in Utrecht, Netherlands in 1964.'},{cat:'Clubs',text:'I played for Ajax and AC Milan during my career.'},{cat:'Awards',text:'I won the Ballon d\'Or three times and the European Championship in 1988.'},{cat:'Famous goal',text:'My volley in the 1988 Euro final against the USSR is considered one of the greatest ever.'},{cat:'Injury',text:'A chronic ankle injury tragically forced me to retire aged just 28.'}],
+   options:['Marco van Basten','Ruud Gullit','Frank Rijkaard','Patrick Kluivert']},
+  {id:'cantona',name:'Eric Cantona',emoji:'🇫🇷',nation:'France',rarity:'silver',type:'player',stats:{goals:143,trophies:10,era:'83-97'},bio:'The King of Old Trafford. Transformed Manchester United into champions.',
+   clues:[{cat:'Birthplace',text:'I was born in Paris, France in 1966 to a Sardinian father.'},{cat:'Club',text:'I joined Manchester United from Leeds and became a legend under Sir Alex Ferguson.'},{cat:'Titles',text:'I won four Premier League titles in five years with Manchester United.'},{cat:'Ban',text:'I was banned for eight months after a kung-fu kick on a Crystal Palace fan in 1995.'},{cat:'Quote',text:'I famously said "The seagulls follow the trawler" at a press conference.'}],
+   options:['Eric Cantona','David Ginola','Laurent Blanc','Didier Deschamps']},
+  {id:'klopp',name:'Jürgen Klopp',emoji:'🇩🇪',nation:'Germany',rarity:'silver',type:'manager',stats:{goals:7,trophies:12,era:'2001-2024'},bio:'"The Normal One." Brought the Gegenpressing revolution. Won everything at Liverpool.',
+   clues:[{cat:'Birthplace',text:'I was born in Stuttgart, Germany in 1967.'},{cat:'Dortmund',text:'I achieved back-to-back Bundesliga titles with Borussia Dortmund.'},{cat:'Liverpool',text:"I won Liverpool's first league title in 30 years in 2020 and the Champions League in 2019."},{cat:'Style',text:'I am famous for "Gegenpressing" — immediate high-intensity pressing after losing the ball.'},{cat:'Retirement',text:'I retired from management in 2024, saying I had run out of energy.'}],
+   options:['Jürgen Klopp','Thomas Tuchel','Julian Nagelsmann','Hansi Flick']},
+  {id:'ancelotti',name:'Carlo Ancelotti',emoji:'🇮🇹',nation:'Italy',rarity:'silver',type:'manager',stats:{goals:26,trophies:29,era:'1992-'},bio:'Most decorated manager in Champions League history. Won it four times.',
+   clues:[{cat:'Birthplace',text:'I was born in Reggiolo, Italy in 1959.'},{cat:'Player',text:'As a player, I was a creative midfielder in the great AC Milan teams of the 1980s.'},{cat:'Record',text:'I have won the Champions League four times — more than any other manager.'},{cat:'Clubs',text:'I have managed Juventus, Milan, Chelsea, PSG, Real Madrid, Bayern, Everton.'},{cat:'Personality',text:'I am famous for my calm demeanour and a raised eyebrow that became a viral meme.'}],
+   options:['Carlo Ancelotti','Fabio Capello','Arrigo Sacchi','Giovanni Trapattoni']},
+  {id:'gerrard',name:'Steven Gerrard',emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',nation:'England',rarity:'bronze',type:'player',stats:{goals:186,trophies:9,era:'98-2016'},bio:"Liverpool's greatest ever captain. Inspired the 2005 Champions League miracle.",
+   clues:[{cat:'Birthplace',text:'I was born in Whiston, Merseyside, England in 1980.'},{cat:'Loyalty',text:'I spent my entire English career at Liverpool, my hometown club.'},{cat:'Istanbul',text:'I captained Liverpool to a miraculous comeback from 3-0 down in the 2005 UCL final.'},{cat:'Infamous',text:'I slipped vs Chelsea in 2014, costing Liverpool the Premier League title.'},{cat:'Manager',text:'I managed Rangers in Scotland before roles in MLS and Saudi Arabia.'}],
+   options:['Steven Gerrard','Frank Lampard','Paul Scholes','Patrick Vieira']},
+  {id:'weah',name:'George Weah',emoji:'🇱🇷',nation:'Liberia',rarity:'bronze',type:'player',stats:{goals:244,trophies:9,era:'85-2003'},bio:"Africa's greatest footballer. The only African to win FIFA World Player of the Year.",
+   clues:[{cat:'Birthplace',text:'I was born in Monrovia, Liberia in 1966.'},{cat:'Clubs',text:'I played for Monaco, PSG, and most famously AC Milan.'},{cat:'Award',text:'I won the 1995 FIFA World Player of the Year and Ballon d\'Or — first African ever.'},{cat:'Goal',text:'My solo goal vs Verona in 1996, starting from my own half, is legendary.'},{cat:'Politics',text:'I became the President of Liberia in 2018.'}],
+   options:["George Weah","Samuel Eto'o","Didier Drogba","Michael Essien"]},
+  {id:'shearer',name:'Alan Shearer',emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',nation:'England',rarity:'bronze',type:'player',stats:{goals:423,trophies:1,era:'88-2006'},bio:'Premier League\'s all-time top scorer. A Geordie legend who never won the title.',
+   clues:[{cat:'Birthplace',text:'I was born in Gosforth, Newcastle in 1970.'},{cat:'Newcastle',text:'I rejected Manchester United to return home to Newcastle for a world record fee in 1996.'},{cat:'Record',text:'I scored 260 Premier League goals — more than any other player, ever.'},{cat:'England',text:'I scored 30 goals for England, captaining my country at Euro 96 on home soil.'},{cat:'Celebration',text:'My trademark celebration was raising one arm straight in the air.'}],
+   options:['Alan Shearer','Michael Owen','Andy Cole','Les Ferdinand']},
+  {id:'yashin',name:'Lev Yashin',emoji:'🇷🇺',nation:'Soviet Union',rarity:'bronze',type:'player',stats:{goals:0,trophies:13,era:'50-70'},bio:'The Black Spider. The only goalkeeper to win the Ballon d\'Or.',
+   clues:[{cat:'Birthplace',text:'I was born in Moscow, Russia (Soviet Union) in 1929.'},{cat:'Club',text:'I played my entire career for Dynamo Moscow — over 300 games.'},{cat:'Award',text:'I am the only goalkeeper in history to win the Ballon d\'Or (1963).'},{cat:'Nickname',text:'I was known as "The Black Spider" — always wore black, seemed to have eight arms.'},{cat:'Trophy',text:"The annual award for the World Cup's best goalkeeper is named after me."}],
+   options:['Lev Yashin','Peter Shilton','Gordon Banks','Dino Zoff']},
+  {id:'modric',name:'Luka Modrić',emoji:'🇭🇷',nation:'Croatia',rarity:'bronze',type:'player',stats:{goals:117,trophies:24,era:'2002-'},bio:'Broke the Messi/Ronaldo Ballon d\'Or monopoly in 2018. Metronome of Real Madrid.',
+   clues:[{cat:'Birthplace',text:'I was born in Zadar, Yugoslavia (now Croatia) in 1985.'},{cat:'Spurs',text:'I joined Real Madrid from Tottenham Hotspur in 2012.'},{cat:'Award',text:'I won the Ballon d\'Or in 2018 — first non-Messi/Ronaldo winner since 2007.'},{cat:'Croatia',text:'I led Croatia to the 2018 World Cup final and 2022 third-place play-off.'},{cat:'Style',text:'I am known for tireless pressing, vision, and composure despite my small frame.'}],
+   options:['Luka Modrić','Ivan Rakitić','Davor Šuker','Dejan Lovren']},
+  {id:'salah',name:'Mohamed Salah',emoji:'🇪🇬',nation:'Egypt',rarity:'bronze',type:'player',stats:{goals:260,trophies:10,era:'2010-'},bio:"The Egyptian King. Liverpool's greatest ever modern player.",
+   clues:[{cat:'Birthplace',text:'I was born in Nagrig, Egypt in 1992.'},{cat:'Liverpool',text:'I have been a sensation at Liverpool since joining in 2017.'},{cat:'Record',text:'I broke the PL scoring record with 32 goals in a 38-game season in 2017-18.'},{cat:'Character',text:'I am known for my charity work in Egypt and dedication to my faith.'},{cat:'Nickname',text:'Liverpool fans call me "The Egyptian King".'}],
+   options:['Mohamed Salah','Sadio Mané','Roberto Firmino','Diogo Jota']},
+  {id:'clough',name:'Brian Clough',emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',nation:'England',rarity:'bronze',type:'manager',stats:{goals:2,trophies:7,era:'65-93'},bio:'Won back-to-back European Cups with Nottingham Forest. Most charismatic British manager.',
+   clues:[{cat:'Birthplace',text:'I was born in Middlesbrough, England in 1935.'},{cat:'Forest',text:'I took Nottingham Forest from Division 2 to back-to-back European Cup wins (1979 & 1980).'},{cat:'Quote',text:'I said: "I wouldn\'t say I was the best manager, but I was in the top one."'},{cat:'Style',text:'I was known for outspoken personality and absolute authority over players.'},{cat:'England',text:'I never managed England, despite being the obvious popular choice.'}],
+   options:['Brian Clough','Ron Greenwood','Bobby Robson','Don Revie']},
+  {id:'wenger',name:'Arsène Wenger',emoji:'🇫🇷',nation:'France',rarity:'bronze',type:'manager',stats:{goals:10,trophies:17,era:'84-2019'},bio:'Transformed Arsenal and English football. Created the "Invincibles". The Professor.',
+   clues:[{cat:'Birthplace',text:'I was born in Strasbourg, France in 1949.'},{cat:'Invincibles',text:'I led Arsenal to an entire Premier League season without losing in 2003-04.'},{cat:'Revolution',text:'I transformed English football with continental training methods and nutrition.'},{cat:'Nickname',text:'The press called me "The Professor" for my intellectual approach.'},{cat:'Phrases',text:'I became famous for saying "I didn\'t see the incident" about controversies.'}],
+   options:['Arsène Wenger','George Graham','Terry Neill','Bruce Rioch']},
+  {id:'owen',name:'Michael Owen',emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',nation:'England',rarity:'bronze',type:'player',stats:{goals:262,trophies:9,era:'96-2013'},bio:'Ballon d\'Or winner 2001. Scored one of the greatest World Cup goals at just 18.',
+   clues:[{cat:'Debut',text:'I burst onto the scene for Liverpool and England as a teenager in 1997-98.'},{cat:'World Cup',text:'I scored a stunning individual goal against Argentina in the 1998 World Cup aged 18.'},{cat:'Award',text:'I won the Ballon d\'Or in 2001 — the last Englishman to win it.'},{cat:'Injury',text:'My career was plagued by hamstring and cruciate ligament injuries.'},{cat:'Clubs',text:'I played for Liverpool, Real Madrid, Newcastle, Man United, and Stoke City.'}],
+   options:['Michael Owen','Robbie Fowler','Steve McManaman','Emile Heskey']},
+  {id:'bergkamp',name:'Dennis Bergkamp',emoji:'🇳🇱',nation:'Netherlands',rarity:'silver',type:'player',stats:{goals:201,trophies:11,era:'86-2006'},bio:'The Non-Flying Dutchman. One of the most technically gifted strikers of all time.',
+   clues:[{cat:'Nickname',text:'I was known as "The Non-Flying Dutchman" because I refused to board aeroplanes.'},{cat:'Club',text:'I spent 11 years at Arsenal, becoming one of the all-time greats.'},{cat:'Goal',text:'My touch and finish against Newcastle in 2002 is widely considered the greatest Premier League goal.'},{cat:'Country',text:'I was a key part of the Netherlands teams of the 1990s and 1998 World Cup.'},{cat:'Name',text:'My parents named me after Dennis Law and Johan Cruyff.'}],
+   options:['Dennis Bergkamp','Patrick Kluivert','Marc Overmars','Arjen Robben']},
+  {id:'kaka',name:'Kaká',emoji:'🇧🇷',nation:'Brazil',rarity:'gold',type:'player',stats:{goals:205,trophies:14,era:'2001-2017'},bio:'2007 Ballon d\'Or winner. Inspired AC Milan to Champions League glory.',
+   clues:[{cat:'Birthplace',text:'I was born in Brasília, Brazil in 1982.'},{cat:'Milan',text:"I was the heartbeat of AC Milan's 2007 Champions League winning team."},{cat:'Award',text:"I won the Ballon d'Or in 2007 — the last Brazilian to win it before Messi's dominance."},{cat:'Record',text:'My 2009 move to Real Madrid was, at the time, the most expensive transfer in history.'},{cat:'Faith',text:'I am a devout Christian and always lifted my shirt to reveal my religious message after scoring.'}],
+   options:['Kaká','Robinho','Júlio César','Lúcio']},
+  {id:'suarez',name:'Luis Suárez',emoji:'🇺🇾',nation:'Uruguay',rarity:'silver',type:'player',stats:{goals:508,trophies:25,era:'2003-'},bio:'One of the most prolific and controversial strikers of his generation.',
+   clues:[{cat:'Nationality',text:'I am from Salto, Uruguay and am one of the greatest strikers in South American history.'},{cat:'PL season',text:'I scored 31 Premier League goals in a single season for Liverpool in 2013-14.'},{cat:'Controversy',text:'I was banned multiple times for biting opponents during matches.'},{cat:'World Cup',text:'I was banned for biting Chiellini at the 2014 World Cup — Uruguay were eliminated.'},{cat:'Barcelona',text:'I formed the deadly "MSN" trio at Barcelona with Messi and Neymar.'}],
+   options:['Luis Suárez','Edinson Cavani','Diego Forlán','Álvaro González']},
+  {id:'neymar',name:'Neymar Jr.',emoji:'🇧🇷',nation:'Brazil',rarity:'gold',type:'player',stats:{goals:445,trophies:26,era:'2009-'},bio:"Brazil's most expensive export. Most expensive transfer in football history.",
+   clues:[{cat:'Birthplace',text:'I was born in Mogi das Cruzes, São Paulo, Brazil in 1992.'},{cat:'Barcelona',text:'I was part of the "MSN" trio at Barcelona alongside Messi and Suárez.'},{cat:'Transfer',text:'My 2017 move to PSG for €222 million is the most expensive transfer ever recorded.'},{cat:'Skill',text:'I am famous for my flair, skill moves, and ability to dribble past defenders at pace.'},{cat:'Injury',text:'My 2014 World Cup ended with a fractured vertebra — Brazil lost 7-1 to Germany without me.'}],
+   options:['Neymar Jr.','Gabriel Jesus','Philippe Coutinho','Marquinhos']},
+  {id:'pirlo',name:'Andrea Pirlo',emoji:'🇮🇹',nation:'Italy',rarity:'silver',type:'player',stats:{goals:100,trophies:18,era:'95-2017'},bio:'The Architect. The most elegant deep-lying playmaker of his era.',
+   clues:[{cat:'Nickname',text:'I was known as "Il Maestro" or "The Architect" for my dictating of play.'},{cat:'Club',text:'I won four Serie A titles with both AC Milan and Juventus.'},{cat:'World Cup',text:'I won the 2006 World Cup with Italy, anchoring the midfield throughout.'},{cat:'Style',text:'I was famous for my passing range, vision, free kicks, and calm under pressure.'},{cat:'MLS',text:'I ended my career at New York City FC in Major League Soccer.'}],
+   options:['Andrea Pirlo','Gennaro Gattuso','Daniele De Rossi','Massimo Ambrosini']},
+  {id:'drogba',name:'Didier Drogba',emoji:'🇨🇮',nation:'Ivory Coast',rarity:'silver',type:'player',stats:{goals:360,trophies:14,era:'98-2018'},bio:'Chelsea legend. His last-minute equaliser in the 2012 UCL final is iconic.',
+   clues:[{cat:'Birthplace',text:'I was born in Abidjan, Ivory Coast in 1978 but grew up partly in France.'},{cat:'Chelsea',text:"I am Chelsea's second all-time top scorer and their greatest cult hero."},{cat:'UCL',text:'I scored in the 88th minute to equalise in the 2012 Champions League final, then scored the winning penalty.'},{cat:'Impact',text:'I helped broker a ceasefire in the Ivory Coast civil war in 2005.'},{cat:'Africa',text:'I was named the African Footballer of the Year four times.'}],
+   options:['Didier Drogba',"Samuel Eto'o",'Michael Essien','Yaya Touré']},
+  {id:'lampard',name:'Frank Lampard',emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',nation:'England',rarity:'bronze',type:'player',stats:{goals:268,trophies:11,era:'95-2017'},bio:'Chelsea\'s greatest midfielder. Most goals by a midfielder in Premier League history.',
+   clues:[{cat:'Club',text:'I am Chelsea\'s greatest ever central midfielder, spending 13 years at the club.'},{cat:'Goals',text:'I hold the record for most Premier League goals by a midfielder — 177.'},{cat:'UCL',text:'I scored in the 2012 Champions League final to help Chelsea to victory.'},{cat:'Award',text:'I was named FWA Footballer of the Year in 2005.'},{cat:'Nickname',text:'I was nicknamed "Super Frank" by Chelsea fans.'}],
+   options:['Frank Lampard','John Terry','Michael Ballack','Joe Cole']},
+  {id:'terry',name:'John Terry',emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',nation:'England',rarity:'bronze',type:'player',stats:{goals:78,trophies:19,era:'98-2018'},bio:'Chelsea captain, leader, legend. The most decorated English defender of his era.',
+   clues:[{cat:'Club',text:'I captained Chelsea for over a decade, never leaving as first-choice centre-back.'},{cat:'Captain',text:'I am the only Chelsea player to lift the Champions League trophy — even though I was suspended for the final.'},{cat:'Honours',text:'I won 5 Premier League titles and 5 FA Cups with Chelsea.'},{cat:'England',text:'I was England captain from 2006 to 2012, playing over 70 times for my country.'},{cat:'Ironman',text:'I was renowned for playing through extraordinary pain and injury.'}],
+   options:['John Terry','Rio Ferdinand','Sol Campbell','Jamie Carragher']},
+  {id:'scholes',name:'Paul Scholes',emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',nation:'England',rarity:'bronze',type:'player',stats:{goals:155,trophies:25,era:'93-2013'},bio:'One of the greatest midfielders of his generation. One-club man at Manchester United.',
+   clues:[{cat:'Club',text:'I spent my entire 20-year career at Manchester United — a true one-club man.'},{cat:'Praise',text:'Xavi Hernández called me "the best midfielder of my generation".'},{cat:'Goals',text:'I was famous for my long-range shooting, including legendary thunderbolts.'},{cat:'Retirement',text:'I retired in 2011 before returning just 8 months later for one final season.'},{cat:'Honours',text:'I won 11 Premier League titles and 2 Champions Leagues with Manchester United.'}],
+   options:['Paul Scholes','Ryan Giggs','Roy Keane','Nicky Butt']},
+  {id:'vieira',name:'Patrick Vieira',emoji:'🇫🇷',nation:'France',rarity:'bronze',type:'player',stats:{goals:65,trophies:15,era:'93-2011'},bio:'Arsenal\'s greatest captain. The warrior engine of both Arsenal and World Cup-winning France.',
+   clues:[{cat:'Birthplace',text:'I was born in Dakar, Senegal, and played for France from 1997.'},{cat:'Arsenal',text:'I captained Arsenal through their most successful period, including the Invincibles season.'},{cat:'France',text:'I was in the France squad that won the 1998 World Cup and Euro 2000.'},{cat:'Style',text:'I was known for my physical power, intensity, and winning mentality in midfield.'},{cat:'Rivalry',text:'My midfield battles with Roy Keane are considered Premier League folklore.'}],
+   options:['Patrick Vieira','Emmanuel Petit','Robert Pirès','Sylvain Wiltord']},
+  {id:'cafu',name:'Cafu',emoji:'🇧🇷',nation:'Brazil',rarity:'bronze',type:'player',stats:{goals:22,trophies:11,era:'88-2008'},bio:'The greatest right-back of all time. Won two World Cups with Brazil.',
+   clues:[{cat:'Birthplace',text:'I was born in Itaquera, São Paulo, Brazil in 1970.'},{cat:'World Cup',text:'I won the World Cup with Brazil in both 1994 and 2002 — captaining the team in 2002.'},{cat:'Club',text:'I played for São Paulo, Roma, Parma, and ended my career at AC Milan.'},{cat:'Style',text:'I was famous for my tireless running, overlapping from right-back, and never stopping.'},{cat:'Honour',text:'I was named in the FIFA World Cup All-Star Team three times.'}],
+   options:['Cafu','Roberto Carlos','Gilberto Silva','Ronaldo']},
+  {id:'maldini',name:'Paolo Maldini',emoji:'🇮🇹',nation:'Italy',rarity:'legend',type:'player',stats:{goals:33,trophies:29,era:'84-2009'},bio:'The greatest defender ever. Spent his entire 25-year career at AC Milan.',
+   clues:[{cat:'Club',text:'I spent my entire 25-year career at AC Milan — 902 appearances.'},{cat:'UCL',text:'I won the Champions League five times with AC Milan.'},{cat:'Position',text:'I was a left-back who became the world\'s greatest defensive player.'},{cat:'Italy',text:'I played 126 times for Italy, captaining the national team.'},{cat:'Legacy',text:'When I was appointed as Technical Director at AC Milan in 2018, I was cheered by fans worldwide.'}],
+   options:['Paolo Maldini','Franco Baresi','Alessandro Nesta','Costacurta']},
+  {id:'carlos',name:'Roberto Carlos',emoji:'🇧🇷',nation:'Brazil',rarity:'silver',type:'player',stats:{goals:117,trophies:18,era:'90-2011'},bio:'The most explosive left-back ever. His free kick against France defied physics.',
+   clues:[{cat:'Club',text:'I played for Real Madrid for 11 years — one of the great one-club eras.'},{cat:'Free kick',text:'My free kick against France in 1997 curved impossibly before entering the net — physicists were baffled.'},{cat:'Pace',text:'I was officially measured running at 35.5 km/h — extraordinary for a defender.'},{cat:'World Cup',text:'I won the 2002 World Cup with Brazil.'},{cat:'Style',text:'I was famous for bomb runs down the left flank and ferocious shot power.'}],
+   options:['Roberto Carlos','Cafu','Cafú','Ronaldo Nazário']},
+  {id:'tevez',name:'Carlos Tevez',emoji:'🇦🇷',nation:'Argentina',rarity:'bronze',type:'player',stats:{goals:321,trophies:17,era:'2001-2021'},bio:'El Apache. Relentless warrior striker who won trophies everywhere he went.',
+   clues:[{cat:'Birthplace',text:'I grew up in poverty in Fuerte Apache, Buenos Aires — hence my nickname "El Apache".'},{cat:'Prem',text:'I played for West Ham, Manchester United, and Manchester City in the Premier League.'},{cat:'Controversy',text:'I caused controversy at Man City by apparently refusing to warm up during a UCL match.'},{cat:'Argentina',text:'I represented Argentina at the 2004 Olympics, winning gold.'},{cat:'Return',text:'I returned to Boca Juniors multiple times throughout my career.'}],
+   options:['Carlos Tevez','Sergio Agüero','Gonzalo Higuain','Nicolás Gaitán']},
+  {id:'bale',name:'Gareth Bale',emoji:'🏴󠁧󠁢󠁷󠁬󠁳󠁿',nation:'Wales',rarity:'silver',type:'player',stats:{goals:242,trophies:20,era:'2003-2023'},bio:"Wales's greatest player. Scored stunning Champions League final goals for Real Madrid.",
+   clues:[{cat:'Nation',text:'I became the most celebrated Welsh footballer in history.'},{cat:'Transfer',text:'I joined Real Madrid from Tottenham in 2013 for what was then a world record fee.'},{cat:'UCL final',text:'I came off the bench in the 2018 Champions League final and scored an outrageous bicycle kick.'},{cat:'Olympics',text:'I helped Wales qualify for Euro 2016 and reach the semi-finals — a historic achievement.'},{cat:'Golf',text:'I was famously photographed with a flag reading "Wales. Golf. Madrid. In that order."'}],
+   options:['Gareth Bale','Aaron Ramsey','Joe Allen','Chris Coleman']},
+  {id:'eto_o',name:"Samuel Eto'o",emoji:'🇨🇲',nation:'Cameroon',rarity:'silver',type:'player',stats:{goals:468,trophies:24,era:'97-2019'},bio:'Three-time African Footballer of the Year. Treble winner with both Barcelona and Inter.',
+   clues:[{cat:'Nation',text:'I am from Cameroon and the most decorated African footballer of my generation.'},{cat:'Africa',text:'I won the African Footballer of the Year award four times.'},{cat:'Barcelona',text:'I won the treble with FC Barcelona in 2009 under Pep Guardiola.'},{cat:'Inter',text:'I won the treble with Inter Milan just a year later under Mourinho — unique achievement.'},{cat:'Goals',text:'I scored 18+ goals in four consecutive Champions League seasons.'}],
+   options:["Samuel Eto'o","Didier Drogba","Michael Essien","Yaya Touré"]},
+];
+
+// ════════════════════════════════════════════
+// 50 RANKED QUESTIONS
+// ════════════════════════════════════════════
+const RANKED_POOL = [
+  {q:"Who is the Premier League's all-time top goal scorer?",opts:["Wayne Rooney","Thierry Henry","Alan Shearer","Sergio Agüero"],ans:2,diff:'easy',fact:"Alan Shearer scored 260 goals, mainly for Blackburn and Newcastle."},
+  {q:"Which club has won the most UEFA Champions League titles?",opts:["AC Milan","Liverpool","Real Madrid","Bayern Munich"],ans:2,diff:'easy',fact:"Real Madrid have won the Champions League a record 15 times."},
+  {q:"Who is the all-time top scorer in World Cup history?",opts:["Ronaldo Nazário","Miroslav Klose","Gerd Müller","Pelé"],ans:1,diff:'easy',fact:"Miroslav Klose scored 16 World Cup goals across four tournaments."},
+  {q:"Which country has won the most FIFA World Cup titles?",opts:["Germany","Italy","Brazil","Argentina"],ans:2,diff:'easy',fact:"Brazil have won five World Cups: 1958, 1962, 1970, 1994, 2002."},
+  {q:"Who holds the record for most Ballon d'Or wins?",opts:["Cristiano Ronaldo","Zinedine Zidane","Lionel Messi","Ronaldo Nazário"],ans:2,diff:'easy',fact:"Lionel Messi has won the Ballon d'Or a record 8 times."},
+  {q:"Which team went an entire Premier League season unbeaten?",opts:["Chelsea","Manchester United","Arsenal","Liverpool"],ans:2,diff:'easy',fact:"Arsenal's 'Invincibles' went 38 games unbeaten in 2003-04."},
+  {q:"Who scored a famous 'Hand of God' goal at the 1986 World Cup?",opts:["Ronaldo","Zidane","Maradona","Pelé"],ans:2,diff:'easy',fact:"Maradona punched the ball into England's net in the 1986 quarter-final."},
+  {q:"Which country won the 2022 FIFA World Cup?",opts:["France","Brazil","Argentina","Croatia"],ans:2,diff:'easy',fact:"Argentina beat France on penalties after a thrilling 3-3 draw."},
+  {q:"Who managed Arsenal's 'Invincibles' in 2003-04?",opts:["Arsène Wenger","Unai Emery","Mikel Arteta","George Graham"],ans:0,diff:'medium',fact:"Wenger led Arsenal to a 38-game unbeaten season — a record that still stands."},
+  {q:"Who is the all-time top scorer in Champions League history?",opts:["Lionel Messi","Robert Lewandowski","Cristiano Ronaldo","Karim Benzema"],ans:2,diff:'medium',fact:"Cristiano Ronaldo holds the record with 140 Champions League goals."},
+  {q:"Which player has the most Champions League assists?",opts:["Cristiano Ronaldo","Lionel Messi","Angel Di Maria","Kevin De Bruyne"],ans:1,diff:'medium',fact:"Lionel Messi leads with 42 Champions League assists."},
+  {q:"What is La Liga's all-time top scorer record?",opts:["Cristiano Ronaldo — 450","Lionel Messi — 474","Raúl — 228","Hugo Sánchez — 234"],ans:1,diff:'medium',fact:"Lionel Messi scored 474 La Liga goals across his career at Barcelona."},
+  {q:"Who won the Golden Boot at the 2018 World Cup?",opts:["Cristiano Ronaldo","Harry Kane","Kylian Mbappé","Romelu Lukaku"],ans:1,diff:'medium',fact:"Harry Kane scored 6 goals to win the Golden Boot at Russia 2018."},
+  {q:"Which goalkeeper has the most clean sheets in Premier League history?",opts:["David De Gea","Petr Čech","Edwin van der Sar","Peter Schmeichel"],ans:1,diff:'medium',fact:"Petr Čech holds the record with 202 clean sheets across his PL career."},
+  {q:"Which player is known as 'El Niño' in Spanish football?",opts:["Fernando Torres","David Villa","Iker Casillas","Andrés Iniesta"],ans:0,diff:'medium',fact:"Fernando Torres earned the nickname 'The Kid' at Atlético Madrid."},
+  {q:"In what year was the Premier League founded?",opts:["1988","1990","1992","1995"],ans:2,diff:'medium',fact:"The Premier League was founded on 20 February 1992."},
+  {q:"Who scored the first ever Premier League goal?",opts:["Teddy Sheringham","Brian Deane","Mark Hughes","Eric Cantona"],ans:1,diff:'hard',fact:"Brian Deane scored for Sheffield United against Manchester United on 15 August 1992."},
+  {q:"Which player has appeared in the most World Cup tournaments?",opts:["Diego Maradona","Lothar Matthäus","Paolo Maldini","Cafu"],ans:1,diff:'hard',fact:"Lothar Matthäus appeared in five World Cups between 1982 and 1998."},
+  {q:"Who holds the record for most goals in a single World Cup match?",opts:["Gerd Müller","Oleg Salenko","Eusébio","Gary Lineker"],ans:1,diff:'hard',fact:"Oleg Salenko scored 5 goals against Cameroon for Russia at the 1994 World Cup."},
+  {q:"Who is the only goalkeeper to win the Ballon d'Or?",opts:["Gordon Banks","Gianluigi Buffon","Lev Yashin","Peter Shilton"],ans:2,diff:'hard',fact:"Lev Yashin won the 1963 Ballon d'Or — the only goalkeeper ever to do so."},
+  {q:"Which club has never been relegated from La Liga?",opts:["Barcelona","Real Madrid","Athletic Bilbao","Sevilla"],ans:2,diff:'hard',fact:"Athletic Bilbao have played every season in La Liga since its founding in 1929."},
+  {q:"Who scored the fastest goal in Champions League history?",opts:["Roy Makaay","Paolo Maldini","Clarence Seedorf","Alessandro Del Piero"],ans:0,diff:'hard',fact:"Roy Makaay scored for Bayern vs Real Madrid in just 10.12 seconds in 2007."},
+  {q:"Who won the Pichichi Trophy the most times?",opts:["Telmo Zarra","Ronaldo Nazário","Lionel Messi","Cristiano Ronaldo"],ans:2,diff:'hard',fact:"Lionel Messi won La Liga's top scorer award (Pichichi) a record 8 times."},
+  {q:"Which player appeared in the most Champions League finals?",opts:["Francisco Gento","Cristiano Ronaldo","Paolo Maldini","Lionel Messi"],ans:0,diff:'impossible',fact:"Francisco Gento won 6 European Cups with Real Madrid between 1956 and 1966."},
+  {q:"Who holds the record for most goals in a single La Liga season?",opts:["Cristiano Ronaldo","Lionel Messi — 50","Telmo Zarra","Hugo Sánchez"],ans:1,diff:'impossible',fact:"Lionel Messi scored 50 La Liga goals in the 2011-12 season."},
+  {q:"Who is the youngest player to score in El Clásico?",opts:["Lamine Yamal","Raúl","Vinícius Júnior","Bojan Krkić"],ans:0,diff:'impossible',fact:"Lamine Yamal scored for Barcelona against Real Madrid at just 17 years old."},
+  {q:"Which English club won the Champions League despite finishing 5th in their league?",opts:["Chelsea","Liverpool 2004-05","Manchester United","Nottingham Forest"],ans:1,diff:'impossible',fact:"Liverpool qualified as defending champions in 2004-05 and won it in Istanbul."},
+  {q:"Who is the only player to win three World Cup tournaments?",opts:["Cafu","Franz Beckenbauer","Pelé","Ronaldo"],ans:2,diff:'impossible',fact:"Pelé is the only player to win the World Cup three times (1958, 1962, 1970)."},
+  {q:"What year did Germany win their fourth World Cup title?",opts:["2002","2006","2010","2014"],ans:3,diff:'medium',fact:"Germany won the 2014 World Cup in Brazil, defeating the hosts 7–1 in the semi-final."},
+  {q:"Who was the first African player to win the Ballon d'Or?",opts:["George Weah","Samuel Eto'o","Didier Drogba","Yaya Touré"],ans:0,diff:'hard',fact:"George Weah won the Ballon d'Or in 1995 — a historic first for African football."},
+  {q:"Which player has won the most trophies in football history?",opts:["Lionel Messi","Dani Alves — 43","Cristiano Ronaldo","Sergio Ramos"],ans:1,diff:'impossible',fact:"Dani Alves won 43 major trophies across his career — the most by any footballer."},
+  {q:"Who scored the winning penalty in the 2006 World Cup final for Italy?",opts:["Alessandro Del Piero","Fabio Grosso","Francesco Totti","Luca Toni"],ans:1,diff:'hard',fact:"Fabio Grosso scored the decisive fifth penalty to win the World Cup for Italy."},
+  {q:"Which nation won the inaugural UEFA European Championship in 1960?",opts:["West Germany","Czechoslovakia","Spain","Soviet Union"],ans:3,diff:'hard',fact:"The Soviet Union won the first UEFA European Championship, defeating Yugoslavia 2–1."},
+  {q:"Who is the youngest player to play in a World Cup final?",opts:["Pelé","Kylian Mbappé","Lionel Messi","Neymar"],ans:0,diff:'hard',fact:"Pelé played in the 1958 World Cup final for Brazil at just 17 years old."},
+  {q:"Which manager has won the most Champions League titles?",opts:["Alex Ferguson","Carlo Ancelotti — 4","Pep Guardiola","Zinedine Zidane"],ans:1,diff:'impossible',fact:"Carlo Ancelotti has won the Champions League four times: 2003, 2007, 2014, 2022."},
+  {q:"Who scored the most goals in a single Premier League season?",opts:["Mohamed Salah","Alan Shearer","Erling Haaland — 36","Cristiano Ronaldo"],ans:2,diff:'medium',fact:"Erling Haaland broke the record with 36 Premier League goals in 2022-23."},
+  {q:"How many teams participated in the first-ever FIFA World Cup in 1930?",opts:["13","16","24","32"],ans:0,diff:'medium',fact:"Only 13 nations participated in the 1930 World Cup in Uruguay."},
+  {q:"Who holds the record for most goals in a single World Cup tournament?",opts:["Eusébio","Just Fontaine — 13","Gerd Müller","Sandor Kocsis"],ans:1,diff:'hard',fact:"Just Fontaine scored 13 goals for France at the 1958 World Cup."},
+  {q:"What year did football first appear in the Olympic Games?",opts:["1896","1900","1904","1908"],ans:1,diff:'impossible',fact:"Football made its Olympic debut at the 1900 Paris Games."},
+  {q:"Who is the only defender to win FIFA World Player of the Year?",opts:["Lionel Messi","Zinedine Zidane","Kaká","Fabio Cannavaro"],ans:3,diff:'medium',fact:"Fabio Cannavaro won the 2006 FIFA World Player of the Year after captaining Italy to glory."},
+  {q:"Which team completed the first treble in men's football?",opts:["Celtic 1967","Ajax","Barcelona","Manchester United"],ans:0,diff:'hard',fact:"Celtic's 'Lisbon Lions' won every competition they entered in 1966-67."},
+  {q:"Who is the youngest goalscorer in Champions League history?",opts:["Ansu Fati","Peter Ofori-Quaye","Bojan Krkić","Youssoufa Moukoko"],ans:1,diff:'impossible',fact:"Peter Ofori-Quaye scored for Rosenborg in 1996 at just 17 years and 195 days old."},
+  {q:"Which La Liga club has the nickname 'Los Blancos'?",opts:["Atlético Madrid","Sevilla","Valencia","Real Madrid"],ans:3,diff:'easy',fact:"Real Madrid are known as 'Los Blancos' (The Whites) for their iconic all-white kit."},
+  {q:"Who scored the winning goal in the 1999 Champions League final?",opts:["Andy Cole","Ole Gunnar Solskjær","Teddy Sheringham","Dwight Yorke"],ans:1,diff:'medium',fact:"Ole Gunnar Solskjær scored the dramatic injury-time winner for Manchester United."},
+  {q:"What is the record winning margin in a World Cup match?",opts:["9–0","10–1","13–0","14–0"],ans:1,diff:'impossible',fact:"Hungary defeated El Salvador 10–1 in the 1982 World Cup group stage."},
+  {q:"Which goalkeeper played the most World Cup matches?",opts:["Gianluigi Buffon","Dino Zoff","Sepp Maier","Essam El-Hadary"],ans:0,diff:'hard',fact:"Gianluigi Buffon appeared in 17 World Cup matches across his Italy career."},
+  {q:"Who became the first player to score 100 Champions League goals?",opts:["Lionel Messi","Raúl","Cristiano Ronaldo","Karim Benzema"],ans:1,diff:'hard',fact:"Raúl González was the first to reach 100 UCL goals, later shattered by Ronaldo and Messi."},
+  {q:"Who won the all-time Premier League assist record?",opts:["Frank Lampard","Ryan Giggs — 162","Cesc Fàbregas","Kevin De Bruyne"],ans:1,diff:'hard',fact:"Ryan Giggs leads with 162 Premier League assists, all for Manchester United."},
+  {q:"Who scored the fastest hat-trick in Premier League history?",opts:["Michael Owen","Robbie Fowler","Sadio Mané — 4m33s","Harry Kane"],ans:2,diff:'hard',fact:"Sadio Mané scored a hat-trick in 4 mins 33 secs for Southampton vs Aston Villa in 2015."},
+];
+
+// ════════════════════════════════════════════
+// CAREER PATH DATA
+// ════════════════════════════════════════════
+const CAREER_PATHS = {
+  'pele': {
+    phases:[
+      {name:'Early Life',diff:'beginner',questions:[
+        {q:"In which Brazilian city was Pelé born in 1940?",opts:["São Paulo","Três Corações","Rio de Janeiro","Salvador"],ans:1,fact:"Pelé was born in Três Corações ('Three Hearts') in the state of Minas Gerais."},
+        {q:"What was Pelé's birth name?",opts:["Edson Arantes do Nascimento","Carlos Alberto Santos","João Pelé Silva","Marcos Pelé Costa"],ans:0,fact:"Pelé's real name is Edson Arantes do Nascimento."},
+        {q:"At what age did Pelé turn professional?",opts:["14","15","16","17"],ans:1,fact:"Pelé signed his first professional contract with Santos FC at just 15 years old."},
+      ]},
+      {name:'Youth Career',diff:'youth',questions:[
+        {q:"Which club did Pelé spend almost his entire career with?",opts:["Flamengo","Vasco da Gama","Santos FC","Botafogo"],ans:2,fact:"Pelé played for Santos FC from 1956 to 1974."},
+        {q:"At what age did Pelé make his World Cup debut?",opts:["15","16","17","18"],ans:2,fact:"Pelé made his World Cup debut for Brazil in 1958 at just 17 years old."},
+      ]},
+      {name:'Professional',diff:'pro',questions:[
+        {q:"How many World Cup goals did Pelé score across all tournaments?",opts:["8","10","12","15"],ans:1,fact:"Pelé scored 12 World Cup goals across the 1958, 1962, 1966, and 1970 tournaments."},
+        {q:"Who did Pelé play his final two seasons for in the USA?",opts:["LA Galaxy","New York Cosmos","Chicago Fire","Dallas Tornado"],ans:1,fact:"Pelé played for the New York Cosmos from 1975 to 1977, helping popularise football in the US."},
+        {q:"Against which country did Pelé score his 1,000th career goal?",opts:["Argentina","Uruguay","Vasco da Gama (club)","Paraguay"],ans:2,fact:"Pelé scored his 1,000th career goal against Vasco da Gama from the penalty spot in 1969."},
+      ]},
+      {name:'Peak / Prime',diff:'prime',questions:[
+        {q:"Which World Cup is considered Pelé's greatest — when he wore the legendary No.10?",opts:["1958","1962","1966","1970"],ans:3,fact:"The 1970 Brazil team (including Pelé at 29) is widely considered the greatest World Cup team ever."},
+        {q:"How many official career goals did Pelé score in total (RSSSF record)?",opts:["643","770","1283","1000"],ans:1,fact:"Pelé officially scored 770 goals in 831 official games — his most widely accepted record."},
+      ]},
+      {name:'Legacy',diff:'legend',questions:[
+        {q:"What honour did FIFA bestow jointly on Pelé and Maradona in 2000?",opts:["World Cup Special Award","Player of the Century","Lifetime Achievement","Golden Ball"],ans:1,fact:"FIFA named both Pelé and Maradona co-winners of the FIFA Player of the Century award in 2000."},
+        {q:"What role did Pelé hold for Brazil after retiring?",opts:["President","Minister of Sport","FIFA Ambassador","UEFA Advisor"],ans:1,fact:"Pelé served as Brazil's Extraordinary Minister of Sport from 1995 to 1998."},
+        {q:"In which year did Pelé pass away?",opts:["2020","2021","2022","2023"],ans:2,fact:"Pelé passed away on 29 December 2022 at the age of 82 due to complications from colon cancer."},
+      ]},
+    ]
+  },
+  'maradona': {
+    phases:[
+      {name:'Early Life',diff:'beginner',questions:[
+        {q:"In which neighbourhood of Buenos Aires was Maradona born?",opts:["Palermo","Recoleta","Villa Fiorito","San Telmo"],ans:2,fact:"Maradona grew up in Villa Fiorito, one of the poorest neighbourhoods in Buenos Aires."},
+        {q:"At what age did Maradona make his professional debut for Argentinos Juniors?",opts:["14","15","16","17"],ans:1,fact:"Maradona debuted for Argentinos Juniors aged just 15 years and 11 months."},
+        {q:"Which youth team did Maradona famously juggle a ball on television aged 8?",opts:["Boca Juniors","Los Cebollitas","Argentinos Juniors","Racing Club"],ans:1,fact:"Maradona amazed TV audiences juggling a ball at halftime for his youth team Los Cebollitas."},
+      ]},
+      {name:'Youth Career',diff:'youth',questions:[
+        {q:"Which Argentine club did Maradona join from Argentinos Juniors in 1981?",opts:["River Plate","Independiente","San Lorenzo","Boca Juniors"],ans:3,fact:"Maradona joined his beloved Boca Juniors in 1981, winning the Argentine title in his first season."},
+        {q:"To which Spanish club did Maradona move in 1982 for a then-world record fee?",opts:["Real Madrid","Atlético Madrid","Barcelona","Valencia"],ans:2,fact:"Barcelona paid $7.6 million for Maradona in 1982 — a world record at the time."},
+      ]},
+      {name:'Professional',diff:'pro',questions:[
+        {q:"Which Italian club did Maradona join in 1984 in another record transfer?",opts:["Juventus","Inter Milan","Napoli","Roma"],ans:2,fact:"Maradona joined Napoli in 1984 for a world record $10.5 million fee."},
+        {q:"How many Serie A titles did Maradona win with Napoli?",opts:["1","2","3","4"],ans:1,fact:"Maradona led Napoli to two Serie A titles (1987 and 1990) — the only Scudetti in their history."},
+        {q:"Which team did Maradona lead to win the 1990 World Cup semi-final against the host nation?",opts:["Argentina vs Italy","Brazil vs Italy","Argentina vs West Germany","England vs Argentina"],ans:0,fact:"Maradona led Argentina to beat Italy in Naples on penalties in the 1990 semi-final!"},
+      ]},
+      {name:'Peak / Prime',diff:'prime',questions:[
+        {q:"In which city was the famous 1986 'Hand of God' game played?",opts:["Buenos Aires","Mexico City","Guadalajara","Azteca"],ans:2,fact:"The Argentina vs England quarter-final was played at Estadio Azteca in Guadalajara, Mexico."},
+        {q:"Maradona's 'Goal of the Century' in 1986 involved beating how many England players?",opts:["4","5","6","7"],ans:2,fact:"Maradona dribbled past 6 England outfield players plus the goalkeeper to score his iconic second goal."},
+      ]},
+      {name:'Legacy',diff:'legend',questions:[
+        {q:"Which club did Maradona manage when he died in 2020?",opts:["Napoli","Boca Juniors","Gimnasia La Plata","Dorados de Sinaloa"],ans:2,fact:"Maradona was manager of Gimnasia La Plata in Argentina when he died in November 2020."},
+        {q:"In which year did Maradona captain Argentina to the World Cup?",opts:["1982","1986","1990","1994"],ans:1,fact:"Maradona captained Argentina to their second World Cup title in 1986 in Mexico."},
+        {q:"In which country did Maradona manage a national team between 2008 and 2010?",opts:["Italy","Mexico","Argentina","UAE"],ans:2,fact:"Maradona managed the Argentina national team from 2008 to 2010, taking them to the World Cup quarter-finals."},
+      ]},
+    ]
+  },
+  'messi': {
+    phases:[
+      {name:'Early Life',diff:'beginner',questions:[
+        {q:"In which city was Lionel Messi born?",opts:["Buenos Aires","Rosario","Córdoba","Mendoza"],ans:1,fact:"Messi was born in Rosario, the third-largest city in Argentina, on 24 June 1987."},
+        {q:"What medical condition did Messi have as a child that Barcelona helped treat?",opts:["Asthma","Growth hormone deficiency","Diabetes","Scoliosis"],ans:1,fact:"Messi was diagnosed with a growth hormone deficiency aged 11. Barcelona agreed to pay for his treatment."},
+        {q:"At what age did Messi join Barcelona's La Masia academy?",opts:["10","11","12","13"],ans:3,fact:"Messi moved to Spain aged 13 after Barcelona agreed to sign him and fund his hormone treatment."},
+      ]},
+      {name:'Youth Career',diff:'youth',questions:[
+        {q:"In which year did Messi make his official first-team debut for Barcelona?",opts:["2003","2004","2005","2006"],ans:1,fact:"Messi made his official first-team debut in a friendly against José Mourinho's Porto in November 2003."},
+        {q:"Who was Messi's iconic strike partner in his early Barcelona years?",opts:["Samuel Eto'o","Thierry Henry","Zlatan Ibrahimović","Ronaldinho"],ans:3,fact:"Ronaldinho famously mentored Messi at Barcelona, with the two forming an irresistible duo."},
+      ]},
+      {name:'Professional',diff:'pro',questions:[
+        {q:"How many consecutive Ballon d'Or awards did Messi win from 2009 to 2012?",opts:["2","3","4","5"],ans:2,fact:"Messi won four consecutive Ballon d'Or awards from 2009 to 2012."},
+        {q:"Which season did Messi score a record 50 La Liga goals?",opts:["2010-11","2011-12","2012-13","2014-15"],ans:1,fact:"Messi scored 50 La Liga goals in 2011-12 — a single-season record that still stands."},
+        {q:"How many La Liga titles did Messi win with Barcelona?",opts:["8","9","10","11"],ans:2,fact:"Messi won 10 La Liga titles with Barcelona over his 17-season career with the club."},
+      ]},
+      {name:'Peak / Prime',diff:'prime',questions:[
+        {q:"In which year did Messi finally win his first senior international trophy with Argentina?",opts:["2019","2021","2022","2023"],ans:1,fact:"Messi won the Copa América 2021 with Argentina, finally ending his international trophy drought."},
+        {q:"Who did Argentina beat in the 2022 World Cup final?",opts:["Brazil","England","France","Portugal"],ans:2,fact:"Argentina beat France on penalties after an extraordinary 3-3 draw in the 2022 Qatar World Cup final."},
+      ]},
+      {name:'Legacy',diff:'legend',questions:[
+        {q:"To which MLS club did Messi move after leaving PSG in 2023?",opts:["LA Galaxy","New York Red Bulls","Atlanta United","Inter Miami"],ans:3,fact:"Messi joined Inter Miami CF in July 2023, becoming the biggest star in MLS history."},
+        {q:"How many Champions League titles did Messi win with Barcelona?",opts:["3","4","5","6"],ans:1,fact:"Messi won the Champions League four times with Barcelona (2006, 2009, 2011, 2015)."},
+        {q:"What is Messi's total number of Ballon d'Or awards as of 2024?",opts:["6","7","8","9"],ans:2,fact:"Messi has won 8 Ballon d'Or awards — the most in history by any player."},
+      ]},
+    ]
+  },
+  'ronaldo_cr7': {
+    phases:[
+      {name:'Early Life',diff:'beginner',questions:[
+        {q:"On which Portuguese island was Cristiano Ronaldo born?",opts:["Azores","Madeira","Terceira","Faial"],ans:1,fact:"Ronaldo was born in Funchal, the capital of Madeira, on 5 February 1985."},
+        {q:"Which Portuguese club did Ronaldo start his career at?",opts:["Benfica","Boavista","Sporting CP","Porto"],ans:2,fact:"Ronaldo developed at Sporting CP's academy, debuting for the first team at age 16."},
+        {q:"At what age did Ronaldo have surgery for a heart condition?",opts:["10","12","15","17"],ans:2,fact:"Ronaldo underwent surgery to correct a heart condition at age 15, which he recovered from quickly."},
+      ]},
+      {name:'Youth Career',diff:'youth',questions:[
+        {q:"In which year did Ronaldo move from Sporting to Manchester United?",opts:["2002","2003","2004","2005"],ans:1,fact:"Ronaldo joined Manchester United in August 2003 after impressing in a pre-season friendly against Sporting."},
+        {q:"Who was the Manchester United manager who signed Ronaldo?",opts:["Ron Atkinson","Brian Clough","Alex Ferguson","Bobby Charlton"],ans:2,fact:"Sir Alex Ferguson signed Ronaldo for £12.24 million after being blown away by his performance."},
+      ]},
+      {name:'Professional',diff:'pro',questions:[
+        {q:"In which year did Ronaldo win his first Champions League with Manchester United?",opts:["2007","2008","2009","2010"],ans:1,fact:"Ronaldo won the Champions League with Man United in Moscow in 2008, beating Chelsea on penalties."},
+        {q:"For how many millions did Real Madrid sign Ronaldo in 2009?",opts:["70m","80m","94m","105m"],ans:2,fact:"Ronaldo joined Real Madrid for €94 million in 2009 — a world record at the time."},
+        {q:"How many La Liga titles did Ronaldo win with Real Madrid?",opts:["2","3","4","5"],ans:0,fact:"Ronaldo won 2 La Liga titles with Real Madrid (2012 and 2017)."},
+      ]},
+      {name:'Peak / Prime',diff:'prime',questions:[
+        {q:"Against whom did Ronaldo score his famous 'knuckleball' free kick in the 2016 Euros?",opts:["Hungary","Poland","Wales","France"],ans:0,fact:"Ronaldo scored his iconic knuckleball free kick against Hungary in the 2016 European Championship."},
+        {q:"With which team did Ronaldo win the inaugural UEFA Nations League in 2019?",opts:["Portugal","Spain","France","Italy"],ans:0,fact:"Ronaldo captained Portugal to win the first UEFA Nations League, defeating the Netherlands 1-0."},
+      ]},
+      {name:'Legacy',diff:'legend',questions:[
+        {q:"Which club did Ronaldo join after leaving Manchester United in 2022?",opts:["Inter Miami","Al Hilal","Al Nassr","Persepolis"],ans:2,fact:"Ronaldo joined Saudi Pro League side Al Nassr in January 2023, in a record-breaking deal."},
+        {q:"How many international goals has Ronaldo scored for Portugal as of 2024?",opts:["More than 100","More than 110","More than 120","More than 130"],ans:2,fact:"Ronaldo has scored over 130 international goals for Portugal — the all-time record in world football."},
+        {q:"What is the name of Ronaldo's first son, born in 2010?",opts:["Cristiano Jr.","Mateo","Alana","Eva"],ans:0,fact:"Cristiano Ronaldo Jr. was born in June 2010."},
+      ]},
+    ]
+  },
+  'ferguson': {
+    phases:[
+      {name:'Early Life',diff:'beginner',questions:[
+        {q:"In which city was Sir Alex Ferguson born?",opts:["Edinburgh","Glasgow","Aberdeen","Dundee"],ans:1,fact:"Ferguson was born in Govan, Glasgow, on 31 December 1941."},
+        {q:"What was Ferguson's position as a professional player?",opts:["Midfielder","Defender","Striker","Goalkeeper"],ans:2,fact:"Ferguson was a centre-forward who played for several clubs including Rangers and Falkirk."},
+        {q:"Which Scottish club gave Ferguson his first manager role in 1974?",opts:["St Mirren","Aberdeen","East Stirlingshire","Falkirk"],ans:2,fact:"Ferguson became manager of East Stirlingshire in 1974 aged just 32."},
+      ]},
+      {name:'Youth Career',diff:'youth',questions:[
+        {q:"Which major trophy did Ferguson win with Aberdeen in 1983?",opts:["Scottish League","Scottish Cup","European Cup Winners' Cup","Champions League"],ans:2,fact:"Aberdeen beat Real Madrid 2-1 to win the UEFA Cup Winners' Cup in Gothenburg in 1983."},
+        {q:"In which year did Ferguson take over as manager of Manchester United?",opts:["1984","1985","1986","1987"],ans:2,fact:"Ferguson replaced Ron Atkinson as Manchester United manager on 6 November 1986."},
+      ]},
+      {name:'Professional',diff:'pro',questions:[
+        {q:"When did Manchester United win their first Premier League title under Ferguson?",opts:["1991-92","1992-93","1993-94","1994-95"],ans:1,fact:"Man United won the first Premier League season in 1992-93 — their first league title in 26 years."},
+        {q:"Which player did Ferguson controversially sell to Real Madrid in 2003?",opts:["Paul Scholes","Ryan Giggs","David Beckham","Roy Keane"],ans:2,fact:"Ferguson sold David Beckham to Real Madrid in 2003."},
+        {q:"How many Premier League titles did Ferguson win in total?",opts:["10","11","12","13"],ans:3,fact:"Ferguson won 13 Premier League titles — more than any other manager in English football history."},
+      ]},
+      {name:'Peak / Prime',diff:'prime',questions:[
+        {q:"What was unique about Manchester United's treble win in 1999?",opts:["First ever treble","First foreign manager","Won all in one week","Won Champions League from behind"],ans:3,fact:"Man United scored twice in injury time to beat Bayern Munich 2-1 in the 1999 Champions League final."},
+        {q:"In what injury time minute did Solskjær score to win the 1999 UCL final?",opts:["90+1","90+3","90+5","90+7"],ans:1,fact:"Ole Gunnar Solskjær scored in the 90+3 minute to complete the stunning comeback against Bayern."},
+      ]},
+      {name:'Legacy',diff:'legend',questions:[
+        {q:"In which year did Ferguson retire as Manchester United manager?",opts:["2011","2012","2013","2014"],ans:2,fact:"Ferguson retired in May 2013 having managed Manchester United for 26 years and 4 months."},
+        {q:"What honour was Ferguson knighted for?",opts:["Services to Education","Services to Football","Services to the Crown","Services to Glasgow"],ans:1,fact:"Alex Ferguson was knighted in 1999 for services to football after winning the treble."},
+        {q:"Which United manager immediately succeeded Ferguson in 2013?",opts:["David Moyes","Louis van Gaal","Pep Guardiola","José Mourinho"],ans:0,fact:"David Moyes was appointed Manchester United manager in May 2013 but was sacked within a year."},
+      ]},
+    ]
+  },
+};
+
+// ════════════════════════════════════════════
+// WINNERS DATA
+// ════════════════════════════════════════════
+const WC_WINNERS = [
+  {year:1930,name:'Uruguay'},{year:1934,name:'Italy'},{year:1938,name:'Italy'},
+  {year:1950,name:'Uruguay'},{year:1954,name:'West Germany'},{year:1958,name:'Brazil'},
+  {year:1962,name:'Brazil'},{year:1966,name:'England'},{year:1970,name:'Brazil'},
+  {year:1974,name:'West Germany'},{year:1978,name:'Argentina'},{year:1982,name:'Italy'},
+  {year:1986,name:'Argentina'},{year:1990,name:'West Germany'},{year:1994,name:'Brazil'},
+  {year:1998,name:'France'},{year:2002,name:'Brazil'},{year:2006,name:'Italy'},
+  {year:2010,name:'Spain'},{year:2014,name:'Germany'},{year:2018,name:'France'},
+  {year:2022,name:'Argentina'},
+];
+const UCL_WINNERS = [
+  {year:1956,name:'Real Madrid'},{year:1957,name:'Real Madrid'},{year:1958,name:'Real Madrid'},
+  {year:1959,name:'Real Madrid'},{year:1960,name:'Real Madrid'},{year:1961,name:'Benfica'},
+  {year:1962,name:'Benfica'},{year:1963,name:'AC Milan'},{year:1964,name:'Inter Milan'},
+  {year:1965,name:'Inter Milan'},{year:1966,name:'Real Madrid'},{year:1967,name:'Celtic'},
+  {year:1968,name:'Manchester United'},{year:1969,name:'AC Milan'},{year:1970,name:'Feyenoord'},
+  {year:1971,name:'Ajax'},{year:1972,name:'Ajax'},{year:1973,name:'Ajax'},
+  {year:1974,name:'Bayern Munich'},{year:1975,name:'Bayern Munich'},{year:1976,name:'Bayern Munich'},
+  {year:1977,name:'Liverpool'},{year:1978,name:'Liverpool'},{year:1979,name:'Nottingham Forest'},
+  {year:1980,name:'Nottingham Forest'},{year:1981,name:'Liverpool'},{year:1982,name:'Aston Villa'},
+  {year:1983,name:'Hamburg'},{year:1984,name:'Liverpool'},{year:1985,name:'Juventus'},
+  {year:1986,name:'Steaua Bucharest'},{year:1987,name:'Porto'},{year:1988,name:'PSV Eindhoven'},
+  {year:1989,name:'AC Milan'},{year:1990,name:'AC Milan'},{year:1991,name:'Red Star Belgrade'},
+  {year:1992,name:'Barcelona'},{year:1993,name:'Marseille'},{year:1994,name:'AC Milan'},
+  {year:1995,name:'Ajax'},{year:1996,name:'Juventus'},{year:1997,name:'Borussia Dortmund'},
+  {year:1998,name:'Real Madrid'},{year:1999,name:'Manchester United'},{year:2000,name:'Real Madrid'},
+  {year:2001,name:'Bayern Munich'},{year:2002,name:'Real Madrid'},{year:2003,name:'AC Milan'},
+  {year:2004,name:'Porto'},{year:2005,name:'Liverpool'},{year:2006,name:'Barcelona'},
+  {year:2007,name:'AC Milan'},{year:2008,name:'Manchester United'},{year:2009,name:'Barcelona'},
+  {year:2010,name:'Inter Milan'},{year:2011,name:'Barcelona'},{year:2012,name:'Chelsea'},
+  {year:2013,name:'Bayern Munich'},{year:2014,name:'Real Madrid'},{year:2015,name:'Barcelona'},
+  {year:2016,name:'Real Madrid'},{year:2017,name:'Real Madrid'},{year:2018,name:'Real Madrid'},
+  {year:2019,name:'Liverpool'},{year:2020,name:'Bayern Munich'},{year:2021,name:'Chelsea'},
+  {year:2022,name:'Real Madrid'},{year:2023,name:'Manchester City'},{year:2024,name:'Real Madrid'},
+];
+
+// ════════════════════════════════════════════
+// SCREEN MANAGER
+// ════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
 }
 
-.mode-card{
-  background:var(--pitch-card);
-  border:1px solid var(--pitch-border);
-  border-radius:18px;padding:24px 20px;
-  cursor:pointer;transition:var(--t);
-  position:relative;overflow:hidden;
-  display:flex;flex-direction:column;gap:10px;
-}
-.mode-card::before{
-  content:'';position:absolute;inset:0;
-  background:var(--glow,rgba(0,230,118,0.08));
-  opacity:0;transition:opacity var(--t);
-}
-.mode-card:hover::before{opacity:1;}
-.mode-card:hover{border-color:rgba(255,255,255,0.18);transform:translateY(-2px);}
-.mode-card:active{transform:translateY(0);}
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+loadPD();
+updateHomeRank();
 
-.mode-card.ranked{--glow:rgba(255,196,0,0.08);border-color:rgba(255,196,0,0.15);grid-column:1/-1;}
-.mode-card.guess{--glow:rgba(192,132,252,0.1);border-color:rgba(192,132,252,0.2);grid-column:1/-1;}
-.mode-card.career{--glow:rgba(0,229,255,0.08);border-color:rgba(0,229,255,0.15);}
-.mode-card.winners{--glow:rgba(255,109,0,0.08);border-color:rgba(255,109,0,0.15);}
+function ensureName(cb){
+  if(pd.name){cb();return;}
+  document.getElementById('name-modal').classList.add('active');
+  const go=()=>{
+    const v=document.getElementById('name-input').value.trim();
+    if(!v) return;
+    pd.name=v;savePD();
+    document.getElementById('name-modal').classList.remove('active');
+    cb();
+  };
+  document.getElementById('name-confirm-btn').onclick=go;
+  document.getElementById('name-input').onkeydown=e=>{if(e.key==='Enter') go();};
+}
 
-.mode-icon{font-size:30px;line-height:1;}
-.mode-name{
-  font-family:'Black Han Sans',sans-serif;
-  font-size:20px;letter-spacing:.5px;
-}
-.mode-name.ranked{color:var(--gold);}
-.mode-name.guess{color:var(--purple);}
-.mode-name.career{color:var(--teal);}
-.mode-name.winners{color:var(--orange);}
-.mode-desc{font-size:12px;color:var(--grey);line-height:1.5;}
-.mode-badge{
-  display:inline-flex;align-items:center;gap:4px;
-  border-radius:100px;padding:3px 10px;
-  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  align-self:flex-start;
-}
-.mode-badge.hard{background:rgba(255,61,87,0.15);border:1px solid rgba(255,61,87,0.3);color:var(--red);}
-.mode-badge.ranked{background:rgba(255,196,0,0.15);border:1px solid rgba(255,196,0,0.3);color:var(--gold);}
-.mode-badge.legends{background:rgba(192,132,252,0.15);border:1px solid rgba(192,132,252,0.3);color:var(--purple);}
-.mode-badge.timed{background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.3);color:var(--orange);}
-.mode-badge.career-b{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);color:var(--teal);}
+// Mode card clicks
+document.querySelectorAll('.mode-card').forEach(c=>{
+  c.addEventListener('click',()=>{
+    const m=c.dataset.mode;
+    if(m==='ranked') ensureName(()=>openRankedModal());
+    else if(m==='guess') ensureName(()=>startGuessMode());
+    else if(m==='career') ensureName(()=>openCareerModal());
+    else if(m==='winners') ensureName(()=>openWinnersModal());
+  });
+});
 
-.home-footer{margin-top:28px;font-size:11px;color:var(--grey);opacity:0;animation:fadeUp .5s .7s forwards;}
-.home-footer span{color:var(--green);}
+// Rank pill
+document.getElementById('rank-pill-btn').addEventListener('click',()=>{
+  document.getElementById('rank-info-xp').textContent=pd.xp;
+  renderRankTiers();
+  document.getElementById('rank-info-modal').classList.add('active');
+});
+document.getElementById('rank-info-close').addEventListener('click',()=>{document.getElementById('rank-info-modal').classList.remove('active');});
+function renderRankTiers(){
+  const el=document.getElementById('rank-tiers-list');
+  const cur=getRank(pd.xp);
+  el.innerHTML=RANKS.map(r=>{
+    const isCur=r.name===cur.name;
+    const unlocked=pd.xp>=r.minXP;
+    return `<div class="rt-row ${isCur?'cur':''}" style="${unlocked?'':'opacity:.4'}">
+      <div class="rt-icon">${r.icon}</div>
+      <div><div class="rt-name" style="color:${r.color}">${r.name}</div>
+      <div class="rt-xp">${r.maxXP===Infinity?r.minXP+'+ XP':r.minXP+' – '+r.maxXP+' XP'}</div></div>
+      ${isCur?'<span class="rt-cur-badge">CURRENT</span>':''}
+    </div>`;
+  }).join('');
+}
 
-/* ══ MODALS ══ */
-.modal-overlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,0.8);backdrop-filter:blur(14px);
-  z-index:100;display:none;
-  align-items:center;justify-content:center;padding:24px;
+// Leaderboard
+document.getElementById('lb-open-btn').addEventListener('click',()=>{renderLB();showScreen('leaderboard-screen');});
+document.getElementById('lb-back-btn').addEventListener('click',()=>showScreen('home-screen'));
+function renderLB(){
+  const lb=getLB();const t=document.getElementById('lb-table');
+  if(!lb.length){t.innerHTML='<div class="lb-empty">No players yet. Be the first!</div>';return;}
+  const medals=['🥇','🥈','🥉'];
+  t.innerHTML=lb.map((p,i)=>{
+    const r=getRank(p.xp);const isme=p.name===pd.name;
+    return`<div class="lb-row ${isme?'is-me':''} ${i<3?'top-'+(i+1):''}">
+      <div class="lb-rnum">${i<3?medals[i]:'#'+(i+1)}</div>
+      <div class="lb-icon">${r.icon}</div>
+      <div class="lb-info"><div class="lb-name">${p.name}${isme?' (You)':''}</div>
+      <div class="lb-sub">${r.name} · ${p.gamesPlayed} games · Best: ${p.bestScore}/10</div></div>
+      <div class="lb-xp" style="color:${r.color}">${p.xp} XP</div>
+    </div>`;
+  }).join('');
 }
-.modal-overlay.active{display:flex;}
-.modal-box{
-  background:#0c1828;border:1px solid rgba(255,255,255,0.1);
-  border-radius:22px;padding:36px 32px;
-  max-width:440px;width:100%;text-align:center;
-  animation:popIn .3s cubic-bezier(.34,1.56,.64,1) forwards;
-}
-.modal-icon{font-size:44px;margin-bottom:14px;}
-.modal-title{font-family:'Black Han Sans',sans-serif;font-size:34px;margin-bottom:6px;}
-.modal-cat{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:22px;}
-.rules-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left;}
-.rules-list li{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.5;color:rgba(240,244,255,.8);}
-.rule-num{
-  width:22px;height:22px;border-radius:50%;
-  background:var(--green);color:#000;
-  font-size:11px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.modal-xp-row{
-  display:flex;justify-content:space-around;
-  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
-  border-radius:12px;padding:12px;margin-bottom:22px;
-}
-.xpi-val{font-family:'Black Han Sans',sans-serif;font-size:19px;color:var(--gold);}
-.xpi-lbl{font-size:10px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
 
-/* Name modal */
-.name-box{background:#0c1828;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:36px;max-width:380px;width:100%;text-align:center;animation:popIn .3s cubic-bezier(.34,1.56,.64,1) forwards;}
-.name-box h2{font-family:'Black Han Sans',sans-serif;font-size:28px;margin-bottom:8px;}
-.name-box p{color:var(--grey);font-size:13px;margin-bottom:22px;}
-.name-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:13px 16px;color:var(--white);font-family:'Barlow',sans-serif;font-size:17px;text-align:center;outline:none;margin-bottom:18px;transition:var(--t);}
-.name-input:focus{border-color:var(--green);}
-.name-input::placeholder{color:var(--grey);}
+// Collection
+document.getElementById('col-open-btn').addEventListener('click',()=>{renderCollection();showScreen('collectables-screen');});
+document.getElementById('col-back-btn').addEventListener('click',()=>showScreen('home-screen'));
+let colFilter='all';
+document.querySelectorAll('.col-filter').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.col-filter').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');colFilter=b.dataset.rarity;renderCollection();
+}));
+function renderCollection(){
+  const grid=document.getElementById('col-grid');grid.innerHTML='';
+  const unlocked=pd.unlockedCards||[];
+  const total=FOOTBALLER_CARDS.length;
+  const cnt=FOOTBALLER_CARDS.filter(f=>unlocked.includes(f.id)).length;
+  document.getElementById('col-count-lbl').textContent=cnt+' / '+total+' Collected';
+  let filtered=FOOTBALLER_CARDS;
+  if(colFilter!=='all') filtered=FOOTBALLER_CARDS.filter(f=>f.rarity===colFilter);
+  filtered.forEach(f=>{
+    const isU=unlocked.includes(f.id);
+    const card=buildCard(f,isU);
+    card.addEventListener('click',()=>openCardDetail(f,isU));
+    grid.appendChild(card);
+  });
+}
+function buildCard(f,isUnlocked){
+  const w=document.createElement('div');
+  w.className='fc-card fc-'+f.rarity;
+  const rl={bronze:'Bronze',silver:'Silver',gold:'Gold',legend:'Legend'};
+  const ti=f.type==='manager'?'🎩':'⚽';
+  let sh='';
+  Object.keys(f.stats).slice(0,3).forEach(k=>{
+    const lbl=k==='goals'?'Goals':k==='trophies'?'Trophies':k;
+    sh+=`<div class="fc-stat"><div class="fc-stat-val" style="color:${rarityColor(f.rarity)}">${f.stats[k]}</div><div class="fc-stat-lbl">${lbl}</div></div>`;
+  });
+  w.innerHTML=`<div class="fc-inner">
+    <div class="fc-emoji"><span style="font-size:40px">${f.emoji}</span><span class="fc-rtag">${rl[f.rarity]}</span></div>
+    <div class="fc-info">
+      <div class="fc-name">${f.name}</div>
+      <div class="fc-nation">${ti} ${f.nation}</div>
+      <div class="fc-stats">${sh}</div>
+    </div>
+    ${!isUnlocked?`<div class="fc-locked"><div class="li">🔒</div><div class="ll">Guess Mode</div></div>`:''}
+  </div>`;
+  return w;
+}
+function rarityColor(r){const m={bronze:'#cd7f32',silver:'#b8c0cc',gold:'#ffc400',legend:'#ff6b6b'};return m[r]||'#fff';}
+function openCardDetail(f,isU){
+  const modal=document.getElementById('card-detail-modal');
+  const box=document.getElementById('card-detail-box');
+  const rc=rarityColor(f.rarity);
+  const rl={bronze:'Bronze',silver:'Silver',gold:'Gold',legend:'Legend'};
+  if(!isU){
+    box.innerHTML=`<button class="cd-close" id="cd-close">✕</button>
+      <div class="cd-emoji">🔒</div>
+      <div class="cd-name" style="color:${rc}">${rl[f.rarity]} Card</div>
+      <p class="cd-locked-msg">Play <strong>Guess The Footballer</strong> to unlock <strong>${f.name}</strong>!</p>
+      <button class="btn-primary" id="cd-go-guess" style="margin-top:8px;">Play Guess Mode 🕵️</button>`;
+    modal.classList.add('active');
+    document.getElementById('cd-close').onclick=()=>modal.classList.remove('active');
+    document.getElementById('cd-go-guess').onclick=()=>{modal.classList.remove('active');startGuessMode();};
+    return;
+  }
+  const sh=Object.keys(f.stats).map(k=>{
+    const lbl=k==='goals'?'Goals':k==='trophies'?'Trophies':k;
+    return`<div class="cds-box"><div class="cds-val" style="color:${rc}">${f.stats[k]}</div><div class="cds-lbl">${lbl}</div></div>`;
+  }).join('');
+  box.innerHTML=`<button class="cd-close" id="cd-close">✕</button>
+    <div class="cd-emoji">${f.emoji}</div>
+    <div class="cd-name">${f.name}</div>
+    <div class="cd-sub" style="color:${rc}">${rl[f.rarity].toUpperCase()} · ${f.nation} · ${f.type==='manager'?'Manager 🎩':'Player ⚽'}</div>
+    <div class="cd-stats">${sh}</div>
+    <p class="cd-bio">${f.bio}</p>`;
+  modal.classList.add('active');
+  document.getElementById('cd-close').onclick=()=>modal.classList.remove('active');
+}
+document.getElementById('card-detail-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('active');});
 
-/* Rank info */
-.rank-info-box{background:#0c1828;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:32px;max-width:400px;width:100%;animation:popIn .3s cubic-bezier(.34,1.56,.64,1) forwards;}
-.rank-info-box h2{font-family:'Black Han Sans',sans-serif;font-size:26px;text-align:center;margin-bottom:4px;}
-.rank-info-sub{text-align:center;font-size:12px;color:var(--grey);margin-bottom:20px;}
-.big-xp-display{text-align:center;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;margin-bottom:18px;}
-.big-xp-display .bxp{font-family:'Black Han Sans',sans-serif;font-size:38px;color:var(--gold);}
-.big-xp-display .bxl{font-size:10px;color:var(--grey);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
-.rank-tiers{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;}
-.rt-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);}
-.rt-row.cur{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.05);}
-.rt-icon{font-size:22px;min-width:28px;text-align:center;}
-.rt-name{font-family:'Black Han Sans',sans-serif;font-size:15px;}
-.rt-xp{font-size:11px;color:var(--grey);margin-top:2px;}
-.rt-cur-badge{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:100px;background:rgba(0,230,118,.15);color:var(--green);margin-left:auto;}
+// XP float
+function floatXP(text,el){
+  const d=document.createElement('div');d.className='xp-float';d.textContent=text;
+  const r=el.getBoundingClientRect();
+  d.style.left=(r.left+r.width/2-24)+'px';d.style.top=(r.top-8)+'px';
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1300);
+}
 
-/* ══ BUTTONS ══ */
-.btn-primary{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  background:var(--green);color:#000;border:none;border-radius:100px;
-  padding:15px 36px;font-family:'Black Han Sans',sans-serif;font-size:17px;
-  letter-spacing:.5px;cursor:pointer;transition:var(--t);width:100%;
+// Rank display helpers
+function showRankResults(xpEarned,oldXP,containerId,rankIconId,rankNameId,rankBarId,rankLblId,rankUpBannerId,rankUpNameId){
+  const newRank=getRank(pd.xp);
+  const oldRank=getRank(oldXP);
+  document.getElementById(rankIconId).textContent=newRank.icon;
+  document.getElementById(rankNameId).textContent=newRank.name;
+  document.getElementById(rankNameId).style.color=newRank.color;
+  const prog=getRankProgress(pd.xp);
+  if(rankBarId){
+    const bar=document.getElementById(rankBarId);
+    if(bar){bar.style.background=newRank.color;bar.style.width='0%';setTimeout(()=>bar.style.width=prog.pct+'%',500);}
+  }
+  if(rankLblId){
+    const lbl=document.getElementById(rankLblId);
+    if(lbl) lbl.textContent=newRank.maxXP===Infinity?'MAX RANK':prog.current+' / '+(newRank.maxXP-newRank.minXP+1)+' XP';
+  }
+  if(newRank.name!==oldRank.name){
+    document.getElementById(rankUpNameId).textContent=newRank.name;
+    document.getElementById(rankUpBannerId).classList.add('show');
+  }else{document.getElementById(rankUpBannerId).classList.remove('show');}
 }
-.btn-primary:hover{background:#00f080;transform:scale(1.02);}
-.btn-secondary{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.2);
-  border-radius:100px;padding:12px 28px;font-size:13px;font-weight:700;
-  cursor:pointer;transition:var(--t);
-}
-.btn-secondary:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.4);}
 
-/* ══ QUIZ SCREEN ══ */
-#quiz-screen{justify-content:flex-start;padding:0;}
-.quiz-header{
-  width:100%;padding:18px 22px 14px;
-  display:flex;align-items:center;gap:14px;
-  border-bottom:1px solid var(--pitch-border);flex-shrink:0;
+// ════════════════════════════════════════════
+// MODE 1: RANKED QUIZ
+// ════════════════════════════════════════════
+let rQ=[],rIdx=0,rScore=0,rCorrect=0,rWrong=0,rStreak=0,rXP=0,rXPb={base:0,streak:0,perfect:0};
+let rAnswered=false,rTimedOut=false,rTimeLeft=90,rTimer=null;
+const DCLASS={easy:'diff-easy',medium:'diff-medium',hard:'diff-hard',impossible:'diff-impossible'};
+const DLABEL={easy:'⚽ Easy',medium:'🎯 Medium',hard:'🔥 Hard',impossible:'💀 Impossible'};
+const DXPM={easy:10,medium:12,hard:16,impossible:22};
+const LETS=['A','B','C','D'];
+function openRankedModal(){document.getElementById('quiz-modal').classList.add('active');}
+document.getElementById('qm-cancel-btn').addEventListener('click',()=>document.getElementById('quiz-modal').classList.remove('active'));
+document.getElementById('qm-start-btn').addEventListener('click',()=>{document.getElementById('quiz-modal').classList.remove('active');startRanked();});
+function startRanked(){
+  rQ=[...RANKED_POOL].sort(()=>Math.random()-.5).slice(0,10);
+  rIdx=0;rScore=0;rCorrect=0;rWrong=0;rStreak=0;rXP=0;rXPb={base:0,streak:0,perfect:0};
+  rAnswered=false;rTimedOut=false;rTimeLeft=90;
+  clearInterval(rTimer);
+  document.getElementById('score-display').textContent='0';
+  document.getElementById('quiz-prog-bar').style.width='0%';
+  document.getElementById('timer-fill').style.width='100%';
+  document.getElementById('timer-fill').className='timer-fill';
+  document.getElementById('timer-num').textContent='90';
+  document.getElementById('timer-num').style.color='';
+  document.getElementById('timer-num').style.animation='';
+  document.getElementById('streak-pill').className='streak-pill';
+  showScreen('quiz-screen');
+  renderRankedQ();
+  startRTimer();
 }
-.q-back{
-  width:38px;height:38px;border-radius:50%;
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;transition:var(--t);font-size:16px;
+function renderRankedQ(animate=false){
+  const q=rQ[rIdx];rAnswered=false;
+  if(animate){
+    const b=document.getElementById('quiz-body');
+    b.classList.add('slide-out');
+    setTimeout(()=>{b.classList.remove('slide-out');b.classList.add('slide-in');fillRQ(q);setTimeout(()=>b.classList.remove('slide-in'),280);},180);
+  }else fillRQ(q);
 }
-.q-back:hover{background:rgba(255,255,255,.1);}
-.q-meta{flex:1;}
-.q-cat{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--green);font-weight:700;}
-.q-prog{font-size:12px;color:var(--grey);margin-top:1px;}
-.streak-pill{
-  display:flex;align-items:center;gap:5px;
-  background:var(--gold-dim);border:1px solid rgba(255,196,0,.25);
-  border-radius:100px;padding:5px 11px;font-size:12px;font-weight:700;
-  color:var(--gold);transition:var(--t);opacity:0;
+function fillRQ(q){
+  document.getElementById('quiz-prog-text').textContent=`Question ${rIdx+1} of 10`;
+  document.getElementById('quiz-prog-bar').style.width=(rIdx/10*100)+'%';
+  document.getElementById('diff-tag').className='diff-tag '+DCLASS[q.diff];
+  document.getElementById('diff-tag').textContent=DLABEL[q.diff];
+  document.getElementById('question-text').textContent=q.q;
+  const g=document.getElementById('opts-grid');g.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='opt-btn';
+    b.innerHTML=`<span class="opt-letter">${LETS[i]}</span><span>${o}</span>`;
+    b.addEventListener('click',()=>selectRankedAns(i,q));
+    g.appendChild(b);
+  });
+  document.getElementById('feedback-box').className='feedback-box';
+  document.getElementById('next-wrap').className='next-wrap';
+  document.getElementById('next-btn').textContent='Next →';
+  document.getElementById('xp-display').innerHTML='';
 }
-.streak-pill.on{opacity:1;}
-.score-pill{
-  display:flex;align-items:center;gap:6px;
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  border-radius:100px;padding:7px 14px;
-  font-family:'Black Han Sans',sans-serif;font-size:17px;
+function selectRankedAns(idx,q){
+  if(rAnswered) return;rAnswered=true;
+  const btns=document.getElementById('opts-grid').querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+  const ok=idx===q.ans;
+  btns[idx].classList.add(ok?'correct':'wrong');
+  if(!ok) btns[q.ans].classList.add('correct');
+  const fb=document.getElementById('feedback-box');
+  const fl=document.getElementById('fb-label');
+  const xpd=document.getElementById('xp-display');
+  if(ok){
+    rScore++;rCorrect++;rStreak++;
+    document.getElementById('score-display').textContent=rScore;
+    const base=DXPM[q.diff]||10;
+    const sb=rStreak>=3?Math.min(rStreak*2,18):0;
+    const thisXP=base+sb;
+    rXP+=thisXP;rXPb.base+=base;rXPb.streak+=sb;
+    fb.className='feedback-box show correct';
+    fl.textContent='✅ Correct!';
+    xpd.innerHTML=`<div class="xp-pill">+${thisXP} XP${sb>0?' (🔥 streak!!)':''}</div>`;
+    floatXP('+'+thisXP+' XP',btns[idx]);
+    if(rStreak>=2){document.getElementById('streak-pill').className='streak-pill on';document.getElementById('streak-count').textContent=rStreak;}
+  }else{
+    rWrong++;rStreak=0;
+    document.getElementById('streak-pill').className='streak-pill';
+    fb.className='feedback-box show wrong';fl.textContent='❌ Wrong!';xpd.innerHTML='';
+  }
+  document.getElementById('fb-text').textContent=q.fact;
+  const nw=document.getElementById('next-wrap');const nb=document.getElementById('next-btn');
+  nw.className='next-wrap show';
+  if(rIdx>=9) nb.textContent='See Results 🏆';
 }
-.prog-bar-wrap{width:100%;height:3px;background:rgba(255,255,255,.07);flex-shrink:0;}
-.prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),#00f080);transition:width .4s ease;}
-.timer-row{width:100%;padding:10px 22px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.timer-wrap{flex:1;height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
-.timer-fill{height:100%;background:var(--green);border-radius:4px;transition:width 1s linear,background .3s;}
-.timer-fill.warn{background:var(--gold);}
-.timer-fill.danger{background:var(--red);}
-.timer-num{font-family:'Black Han Sans',sans-serif;font-size:19px;min-width:26px;text-align:right;}
-.quiz-body{
-  flex:1;width:100%;max-width:680px;margin:0 auto;
-  padding:22px 22px 32px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;
+document.getElementById('next-btn').addEventListener('click',()=>{
+  rIdx++;if(rIdx>=10) finishRanked(); else renderRankedQ(true);
+});
+function startRTimer(){
+  document.getElementById('timer-fill').style.width='100%';
+  document.getElementById('timer-num').textContent=rTimeLeft;
+  rTimer=setInterval(()=>{
+    rTimeLeft--;
+    document.getElementById('timer-num').textContent=rTimeLeft;
+    const pct=(rTimeLeft/90)*100;
+    document.getElementById('timer-fill').style.width=pct+'%';
+    if(rTimeLeft<=20) document.getElementById('timer-fill').classList.add('warn');
+    if(rTimeLeft<=10){document.getElementById('timer-fill').classList.remove('warn');document.getElementById('timer-fill').classList.add('danger');document.getElementById('timer-num').style.color='var(--red)';document.getElementById('timer-num').style.animation='pulse 1s infinite';}
+    if(rTimeLeft<=0){clearInterval(rTimer);rTimedOut=true;document.getElementById('timeout-overlay').classList.add('active');}
+  },1000);
 }
-.diff-tag{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  padding:4px 12px;border-radius:100px;align-self:flex-start;
+document.getElementById('quiz-back-btn').addEventListener('click',()=>{clearInterval(rTimer);document.getElementById('timeout-overlay').classList.remove('active');showScreen('home-screen');});
+document.getElementById('timeout-results-btn').addEventListener('click',()=>{document.getElementById('timeout-overlay').classList.remove('active');finishRanked();});
+function finishRanked(){
+  clearInterval(rTimer);document.getElementById('timeout-overlay').classList.remove('active');
+  if(rScore===10){rXP+=30;rXPb.perfect=30;}
+  const pct=rCorrect>0?Math.round(rCorrect/10*100):0;
+  document.getElementById('res-score-num').textContent=rScore;
+  document.getElementById('stat-correct').textContent=rCorrect;
+  document.getElementById('stat-wrong').textContent=rWrong;
+  document.getElementById('stat-pct').textContent=pct+'%';
+  const circ=2*Math.PI*70;
+  const offset=circ-(rScore/10)*circ;
+  const ring=document.getElementById('ring-fill');
+  ring.style.strokeDashoffset=offset;
+  let grade,quote,attr,rc='';
+  if(rScore>=9){grade='⚡ Legendary';quote='"You know this game better than most coaches."';attr='— Pep Guardiola';rc='';}
+  else if(rScore>=7){grade='🔥 World Class';quote='"You did incredible. Like Messi in 2011."';attr='— Pep Guardiola';rc='';}
+  else if(rScore>=5){grade='🎯 Solid Display';quote='"Decent. Not special… yet."';attr='— Jose Mourinho';rc='mid';}
+  else if(rScore>=3){grade='😬 Room to Grow';quote='"This is not football. This is comedy."';attr='— Jose Mourinho';rc='fail';}
+  else{grade='💀 Did You Even Watch?';quote='"I have seen better decisions made by a goalpost."';attr='— Jose Mourinho';rc='fail';}
+  ring.className='ring-fill'+(rc?' '+rc:'');
+  document.getElementById('results-grade').textContent=grade;
+  document.getElementById('results-quote').textContent=quote;
+  document.getElementById('results-attr').textContent=attr;
+  const oldXP=pd.xp;
+  pd.xp+=rXP;pd.gamesPlayed+=1;if(rScore>pd.bestScore)pd.bestScore=rScore;
+  savePD();saveLB();updateHomeRank();
+  document.getElementById('res-xp-num').textContent='+'+rXP;
+  let bp=[];
+  if(rXPb.base>0)bp.push(rCorrect+' correct × base');
+  if(rXPb.streak>0)bp.push('+'+rXPb.streak+' streak');
+  if(rXPb.perfect>0)bp.push('+30 perfect!');
+  document.getElementById('res-xp-breakdown').textContent=bp.join(' · ')||'0 correct';
+  document.getElementById('stat-total-xp').textContent=pd.xp;
+  showRankResults(rXP,oldXP,'','res-rank-icon','res-rank-name','res-rank-bar','res-rank-lbl','rank-up-banner','rank-up-name');
+  setTimeout(()=>showScreen('results-screen'),100);
 }
-.diff-easy{background:rgba(0,230,118,.14);color:var(--green);}
-.diff-medium{background:rgba(255,196,0,.14);color:var(--gold);}
-.diff-hard{background:rgba(255,61,87,.14);color:var(--red);}
-.diff-impossible{background:rgba(192,132,252,.14);color:var(--purple);}
-.question-text{
-  font-family:'Black Han Sans',sans-serif;
-  font-size:clamp(20px,4.5vw,32px);
-  line-height:1.15;letter-spacing:.2px;
-}
-.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
-.opt-btn{
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  border-radius:14px;padding:17px 15px;color:var(--white);
-  font-family:'Barlow',sans-serif;font-size:14px;font-weight:500;
-  cursor:pointer;text-align:left;transition:var(--t);
-  line-height:1.35;display:flex;align-items:flex-start;gap:9px;
-}
-.opt-btn:hover:not(:disabled){background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);transform:translateY(-1px);}
-.opt-btn:disabled{cursor:default;}
-.opt-btn.correct{background:rgba(0,230,118,.14);border-color:var(--green);color:var(--green);}
-.opt-btn.wrong{background:rgba(255,61,87,.12);border-color:var(--red);color:var(--red);}
-.opt-letter{
-  width:24px;height:24px;border-radius:7px;
-  background:rgba(255,255,255,.08);
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;
-}
-.opt-btn.correct .opt-letter{background:var(--green);color:#000;}
-.opt-btn.wrong .opt-letter{background:var(--red);color:#fff;}
-.feedback-box{
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  border-radius:14px;padding:15px 18px;
-  font-size:13px;line-height:1.5;color:rgba(240,244,255,.8);
-  display:none;animation:fadeUp .3s forwards;
-}
-.feedback-box.show{display:block;}
-.feedback-box.correct{border-color:rgba(0,230,118,.3);}
-.feedback-box.wrong{border-color:rgba(255,61,87,.2);}
-.fb-label{font-family:'Black Han Sans',sans-serif;font-size:17px;margin-bottom:4px;}
-.feedback-box.correct .fb-label{color:var(--green);}
-.feedback-box.wrong .fb-label{color:var(--red);}
-.xp-pill{
-  display:inline-flex;align-items:center;gap:6px;margin-top:8px;
-  background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.2);
-  border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--gold);
-}
-.next-wrap{display:none;}
-.next-wrap.show{display:flex;justify-content:flex-end;}
-.btn-next{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--white);color:#000;border:none;border-radius:100px;
-  padding:13px 26px;font-family:'Black Han Sans',sans-serif;font-size:15px;
-  cursor:pointer;transition:var(--t);
-}
-.btn-next:hover{background:var(--green);transform:scale(1.03);}
+document.getElementById('retry-btn').addEventListener('click',startRanked);
+document.getElementById('home-btn').addEventListener('click',()=>showScreen('home-screen'));
 
-/* ══ RESULTS ══ */
-#results-screen{text-align:center;gap:0;padding:24px 16px;}
-.results-ring{position:relative;width:150px;height:150px;margin:0 auto 28px;animation:fadeUp .5s .1s both;}
-.results-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
-.ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:8;}
-.ring-fill{fill:none;stroke:var(--green);stroke-width:8;stroke-linecap:round;stroke-dasharray:440;stroke-dashoffset:440;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1) .4s;}
-.ring-fill.fail{stroke:var(--red);}
-.ring-fill.mid{stroke:var(--gold);}
-.score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.score-big{font-family:'Black Han Sans',sans-serif;font-size:46px;line-height:1;}
-.score-denom{font-size:12px;color:var(--grey);}
-.results-grade{font-family:'Black Han Sans',sans-serif;font-size:clamp(32px,7vw,58px);margin-bottom:8px;animation:fadeUp .5s .3s both;}
-.results-quote{font-size:14px;font-style:italic;color:rgba(240,244,255,.6);max-width:380px;line-height:1.6;margin:0 auto 10px;animation:fadeUp .5s .45s both;}
-.results-attr{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:22px;animation:fadeUp .5s .55s both;}
-.xp-gained-box{
-  background:linear-gradient(135deg,rgba(255,196,0,.1),rgba(255,196,0,.05));
-  border:1px solid rgba(255,196,0,.25);border-radius:16px;
-  padding:16px 22px;margin-bottom:10px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  max-width:440px;width:100%;
+// ════════════════════════════════════════════
+// MODE 2: GUESS THE FOOTBALLER
+// ════════════════════════════════════════════
+const GUESS_ROUND=8;
+let gFootballers=[],gIdx=0,gClueIdx=0,gScore=0,gXP=0,gLives=3,gStreak=0,gNewCards=[];
+let ftTimer=null,ftTimeLeft=25;
+function startGuessMode(){
+  gFootballers=[...FOOTBALLER_CARDS].sort(()=>Math.random()-.5).slice(0,GUESS_ROUND);
+  gIdx=0;gScore=0;gXP=0;gLives=3;gStreak=0;gNewCards=[];
+  showScreen('guess-screen');
+  renderLives('lives-row',3);
+  renderGuessQ();
 }
-.xgb-left{text-align:left;}
-.xgb-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);margin-bottom:4px;}
-.xgb-num{font-family:'Black Han Sans',sans-serif;font-size:34px;color:var(--gold);line-height:1;}
-.xgb-breakdown{font-size:10px;color:rgba(255,196,0,.6);margin-top:2px;}
-.rank-block{text-align:right;}
-.rank-badge-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:5px;}
-.rank-badge-icon{font-size:26px;}
-.rank-badge-name{font-family:'Black Han Sans',sans-serif;font-size:18px;}
-.rank-prog-bar{width:130px;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-left:auto;}
-.rank-prog-fill{height:100%;border-radius:3px;transition:width 1.5s cubic-bezier(.4,0,.2,1) .8s;}
-.rank-prog-lbl{font-size:10px;color:var(--grey);margin-top:3px;}
-.rank-up-banner{
-  background:linear-gradient(135deg,rgba(255,107,107,.15),rgba(255,196,0,.1));
-  border:1px solid rgba(255,107,107,.3);border-radius:12px;
-  padding:10px 16px;font-family:'Black Han Sans',sans-serif;font-size:17px;
-  letter-spacing:1px;color:#ff6b6b;text-align:center;
-  animation:rankUpPulse .6s ease both;display:none;max-width:440px;width:100%;
+function renderLives(id,total){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='';
+  for(let i=0;i<total;i++){
+    const sp=document.createElement('span');sp.className='life-dot';sp.id=id+'-life-'+i;sp.textContent='❤️';el.appendChild(sp);
+  }
 }
-.rank-up-banner.show{display:block;}
-.stats-row{display:flex;gap:10px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;animation:fadeUp .5s .7s both;}
-.stat-pill{background:var(--pitch-card);border:1px solid var(--pitch-border);border-radius:14px;padding:13px 18px;text-align:center;}
-.stat-val{font-family:'Black Han Sans',sans-serif;font-size:26px;line-height:1;}
-.stat-lbl{font-size:10px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
-.res-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;animation:fadeUp .5s .8s both;}
+function updateLives(id,lives,total){
+  for(let i=0;i<total;i++){
+    const sp=document.getElementById(id+'-life-'+i);
+    if(sp) sp.className='life-dot'+(i<lives?'':' lost');
+  }
+}
+function renderGuessQ(){
+  const f=gFootballers[gIdx];gClueIdx=0;
+  clearInterval(ftTimer);
+  document.getElementById('guess-prog-text').textContent=`Footballer ${gIdx+1} of ${GUESS_ROUND}`;
+  document.getElementById('guess-score-display').textContent=gScore;
+  renderClueCards(f,0);
+  updatePtsBadge(f.clues.length);
+  const opts=document.getElementById('guess-opts');opts.innerHTML='';
+  f.options.forEach(o=>{
+    const b=document.createElement('button');b.className='g-opt-btn';b.textContent=o;
+    b.addEventListener('click',()=>handleGuessAns(o,f));
+    opts.appendChild(b);
+  });
+  document.getElementById('guess-feedback').style.display='none';
+  document.getElementById('guess-next-wrap').className='next-wrap';
+  document.getElementById('reveal-btn').disabled=false;
+  document.getElementById('reveal-btn').textContent=`👁 Reveal Clue 2 (-1 pt)`;
+  document.getElementById('clue-counter').textContent=`Clue 1 of ${f.clues.length}`;
+  setFtDiff(f);
+  startFtTimer(f);
+}
+function setFtDiff(f){
+  const r=f.rarity;
+  const el=document.getElementById('ft-diff-badge');
+  if(r==='bronze'||r==='silver'){el.className='ft-diff-badge easy';el.textContent='Easy';}
+  else if(r==='gold'){el.className='ft-diff-badge hard';el.textContent='Hard';}
+  else{el.className='ft-diff-badge legendary';el.textContent='Legendary';}
+}
+function startFtTimer(f){
+  ftTimeLeft=f.rarity==='legend'?18:f.rarity==='gold'?22:25;
+  updateFtTimer(ftTimeLeft,ftTimeLeft);
+  ftTimer=setInterval(()=>{
+    ftTimeLeft--;
+    updateFtTimer(ftTimeLeft,f.rarity==='legend'?18:f.rarity==='gold'?22:25);
+    if(ftTimeLeft<=0){clearInterval(ftTimer);autoWrongGuess(f);}
+  },1000);
+}
+function autoWrongGuess(f){handleGuessAns('__timeout__',f);}
+function updateFtTimer(left,total){
+  document.getElementById('ft-timer-num').textContent=left;
+  const circ=113.1;const offset=circ-(left/total)*circ;
+  const ring=document.getElementById('ft-ring-fill');
+  ring.style.strokeDashoffset=offset;
+  if(left<=8) ring.style.stroke='var(--red)';
+  else if(left<=12) ring.style.stroke='var(--gold)';
+  else ring.style.stroke='var(--purple)';
+}
+function renderClueCards(f,upTo){
+  const w=document.getElementById('clue-cards-wrap');w.innerHTML='';
+  for(let i=0;i<=upTo;i++){
+    const c=f.clues[i];const card=document.createElement('div');card.className='clue-card';
+    card.innerHTML=`<div class="clue-num">${i+1}</div><div><div class="clue-cat">${c.cat}</div><div class="clue-text">${c.text}</div></div>`;
+    w.appendChild(card);
+  }
+}
+document.getElementById('reveal-btn').addEventListener('click',()=>{
+  const f=gFootballers[gIdx];
+  if(gClueIdx>=f.clues.length-1) return;
+  gClueIdx++;
+  renderClueCards(f,gClueIdx);
+  document.getElementById('clue-counter').textContent=`Clue ${gClueIdx+1} of ${f.clues.length}`;
+  updatePtsBadge(Math.max(1,f.clues.length-gClueIdx));
+  const btn=document.getElementById('reveal-btn');
+  if(gClueIdx>=f.clues.length-1){btn.disabled=true;btn.textContent='👁 All Clues Revealed';}
+  else btn.textContent=`👁 Reveal Clue ${gClueIdx+2} (-1 pt)`;
+});
+function updatePtsBadge(pts){document.getElementById('clue-pts-badge').textContent=`🌟 ${pts} Point${pts!==1?'s':''} Available`;}
+function handleGuessAns(chosen,f){
+  clearInterval(ftTimer);
+  document.querySelectorAll('.g-opt-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===f.name) b.classList.add('correct');
+    else if(b.textContent===chosen&&chosen!==f.name) b.classList.add('wrong');
+  });
+  const isOk=chosen===f.name;
+  const pts=isOk?Math.max(1,f.clues.length-gClueIdx):0;
+  const xpe=isOk?pts*10:0;
+  if(isOk){
+    gScore+=pts;gXP+=xpe;gStreak++;
+    if(!pd.unlockedCards.includes(f.id)){pd.unlockedCards.push(f.id);gNewCards.push(f.id);}
+    if(gStreak>=3){
+      document.getElementById('guess-streak-bar').className='guess-streak-bar on';
+      document.getElementById('guess-streak-text').textContent=`🔥 ${gStreak}× Streak — Bonus XP!`;
+    }
+  }else{
+    gLives--;gStreak=0;
+    document.getElementById('guess-streak-bar').className='guess-streak-bar';
+    updateLives('lives-row',gLives,3);
+    if(gLives<=0){
+      document.getElementById('guess-gameover').style.display='flex';return;
+    }
+  }
+  document.getElementById('guess-score-display').textContent=gScore;
+  const fb=document.getElementById('guess-feedback');fb.style.display='block';
+  document.getElementById('gf-icon').textContent=isOk?'✅':'❌';
+  document.getElementById('gf-name').textContent=isOk?`${f.name}!`:`It was ${f.name}`;
+  document.getElementById('gf-detail').textContent=isOk?`+${pts} points · +${xpe} XP${gNewCards.includes(f.id)?'  · 🃏 Card Unlocked!':''}`:f.bio;
+  const cr=document.getElementById('gf-card-reveal');cr.innerHTML='';
+  cr.appendChild(buildCard(f,true));
+  document.getElementById('reveal-btn').disabled=true;
+  const nw=document.getElementById('guess-next-wrap');nw.className='next-wrap show';
+  document.getElementById('guess-next-btn').textContent=gIdx>=GUESS_ROUND-1?'See Results 🏆':'Next Footballer →';
+}
+document.getElementById('guess-next-btn').addEventListener('click',()=>{
+  gIdx++;if(gIdx>=GUESS_ROUND) finishGuess(); else{renderGuessQ();updateLives('lives-row',gLives,3);}
+});
+document.getElementById('guess-back-btn').addEventListener('click',()=>{clearInterval(ftTimer);showScreen('home-screen');});
+document.getElementById('guess-gameover-results-btn').addEventListener('click',()=>{document.getElementById('guess-gameover').style.display='none';finishGuess();});
+function finishGuess(){
+  clearInterval(ftTimer);
+  const maxScore=GUESS_ROUND*5;const pct=gScore/maxScore;
+  let grade;
+  if(pct>=.9)grade='World-Class Detective 🕵️';
+  else if(pct>=.7)grade='Senior Scout 🔍';
+  else if(pct>=.5)grade='Football Analyst 📋';
+  else if(pct>=.3)grade='Football Casual 🤔';
+  else grade='Start Watching More Football 😅';
+  document.getElementById('gr-big').textContent=gScore;
+  document.getElementById('gr-max').textContent='/ '+maxScore+' pts';
+  document.getElementById('gr-grade').textContent=grade;
+  document.getElementById('gr-xp').textContent='+'+gXP;
+  const oldXP=pd.xp;
+  pd.xp+=gXP;pd.gamesPlayed+=1;savePD();saveLB();updateHomeRank();
+  const ug=document.getElementById('unlocked-grid');ug.innerHTML='';
+  if(gNewCards.length===0){ug.innerHTML='<p style="color:var(--grey);font-size:12px;">No new cards this round</p>';}
+  else{gNewCards.forEach(id=>{const f=FOOTBALLER_CARDS.find(x=>x.id===id);if(f)ug.appendChild(buildCard(f,true));});}
+  showRankResults(gXP,oldXP,'','gr-rank-icon','gr-rank-name',null,null,'guess-rank-up-banner','guess-rank-up-name');
+  showScreen('guess-results-screen');
+}
+document.getElementById('gr-retry-btn').addEventListener('click',startGuessMode);
+document.getElementById('gr-home-btn').addEventListener('click',()=>showScreen('home-screen'));
+document.getElementById('gr-col-btn').addEventListener('click',()=>{renderCollection();showScreen('collectables-screen');});
 
-/* ══ TIMEOUT ══ */
-.timeout-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(18px);
-  z-index:200;display:none;align-items:center;justify-content:center;
-  flex-direction:column;gap:14px;text-align:center;padding:24px;
+// ════════════════════════════════════════════
+// MODE 3: CAREER PATH
+// ════════════════════════════════════════════
+let cPaths=null,cPhaseIdx=0,cQIdx=0,cScore=0,cXP=0,cLives=3,cAnswered=false,cCurrentF=null;
+const PHASE_DXPM={beginner:8,youth:12,pro:16,prime:22,legend:30};
+function openCareerModal(){
+  const sel=document.getElementById('career-footballer-select');sel.innerHTML='';
+  Object.keys(CAREER_PATHS).forEach(key=>{
+    const path=CAREER_PATHS[key];const f=FOOTBALLER_CARDS.find(x=>x.id===key);
+    if(!f) return;
+    const btn=document.createElement('button');
+    btn.style.cssText='background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;text-align:left;color:var(--white);width:100%;';
+    btn.innerHTML=`<span style="font-size:24px">${f.emoji}</span><div><div style="font-family:Black Han Sans;font-size:15px;color:var(--teal)">${f.name}</div><div style="font-size:11px;color:var(--grey);margin-top:2px">${path.phases.length} phases · ${path.phases.reduce((a,p)=>a+p.questions.length,0)} questions</div></div><span style="margin-left:auto;color:var(--teal);font-size:12px;">→</span>`;
+    btn.addEventListener('mouseover',()=>btn.style.background='rgba(0,229,255,.07)');
+    btn.addEventListener('mouseout',()=>btn.style.background='rgba(255,255,255,.04)');
+    btn.addEventListener('click',()=>{document.getElementById('career-modal').classList.remove('active');startCareer(key);});
+    sel.appendChild(btn);
+  });
+  document.getElementById('career-modal').classList.add('active');
 }
-.timeout-overlay.active{display:flex;}
-.to-icon{font-size:68px;animation:shake .5s;}
-.to-title{font-family:'Black Han Sans',sans-serif;font-size:50px;color:var(--red);}
-.to-sub{color:var(--grey);font-size:15px;margin-bottom:22px;}
+document.getElementById('career-cancel-btn').addEventListener('click',()=>document.getElementById('career-modal').classList.remove('active'));
+function startCareer(key){
+  cCurrentF=FOOTBALLER_CARDS.find(x=>x.id===key);
+  cPaths=CAREER_PATHS[key];
+  cPhaseIdx=0;cQIdx=0;cScore=0;cXP=0;cLives=3;cAnswered=false;
+  document.getElementById('career-fc-emoji').textContent=cCurrentF.emoji;
+  document.getElementById('career-fc-name').textContent=cCurrentF.name;
+  const totalQ=cPaths.phases.reduce((a,p)=>a+p.questions.length,0);
+  document.getElementById('career-fc-sub').textContent=cPaths.phases.length+' phases · '+totalQ+' questions';
+  renderLives('career-lives-row',3);
+  showScreen('career-screen');
+  renderCareerQ();
+}
+function getCareerQ(){
+  const phase=cPaths.phases[cPhaseIdx];
+  return{phase,q:phase.questions[cQIdx]};
+}
+function renderCareerQ(){
+  const {phase,q}=getCareerQ();
+  cAnswered=false;
+  const totalQ=cPaths.phases.reduce((a,p)=>a+p.questions.length,0);
+  let answeredSoFar=0;for(let p=0;p<cPhaseIdx;p++) answeredSoFar+=cPaths.phases[p].questions.length;
+  answeredSoFar+=cQIdx;
+  document.getElementById('career-prog-text').textContent=`Phase ${cPhaseIdx+1}: ${phase.name}`;
+  document.getElementById('career-prog-bar').style.width=(answeredSoFar/totalQ*100)+'%';
+  document.getElementById('ch-prog-fill').style.width=(answeredSoFar/totalQ*100)+'%';
+  document.getElementById('ch-prog-lbl').textContent=answeredSoFar+' / '+totalQ;
+  document.getElementById('career-phase-badge').textContent=`Phase ${cPhaseIdx+1}/${cPaths.phases.length}`;
+  const diffEl=document.getElementById('cq-diff');
+  diffEl.className='cq-diff '+phase.diff;
+  diffEl.textContent=phase.diff.charAt(0).toUpperCase()+phase.diff.slice(1);
+  document.getElementById('career-q-text').textContent=q.q;
+  const optEl=document.getElementById('career-opts');optEl.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='career-opt';
+    b.innerHTML=`<span class="opt-letter">${LETS[i]}</span><span>${o}</span>`;
+    b.addEventListener('click',()=>selectCareerAns(i,q,phase));
+    optEl.appendChild(b);
+  });
+  document.getElementById('career-fb').className='career-fb';
+  document.getElementById('career-next-wrap').className='next-wrap';
+  document.getElementById('career-next-btn').textContent='Next →';
+  document.getElementById('career-xp-display').innerHTML='';
+}
+function selectCareerAns(idx,q,phase){
+  if(cAnswered) return;cAnswered=true;
+  const btns=document.getElementById('career-opts').querySelectorAll('.career-opt');
+  btns.forEach(b=>b.disabled=true);
+  const ok=idx===q.ans;
+  btns[idx].classList.add(ok?'correct':'wrong');
+  if(!ok) btns[q.ans].classList.add('correct');
+  const fb=document.getElementById('career-fb');
+  const fl=document.getElementById('career-fb-lbl');
+  const xpd=document.getElementById('career-xp-display');
+  if(ok){
+    cScore++;
+    const xpe=PHASE_DXPM[phase.diff]||10;cXP+=xpe;
+    fb.className='career-fb show correct';fl.textContent='✅ Correct!';
+    xpd.innerHTML=`<div class="xp-pill">+${xpe} XP</div>`;
+    floatXP('+'+xpe+' XP',btns[idx]);
+    document.getElementById('career-score-display').textContent=cScore;
+  }else{
+    cLives--;updateLives('career-lives-row',cLives,3);
+    fb.className='career-fb show wrong';fl.textContent='❌ Wrong!';xpd.innerHTML='';
+  }
+  document.getElementById('career-fb-text').textContent=q.fact;
+  const nw=document.getElementById('career-next-wrap');nw.className='next-wrap show';
+  const nb=document.getElementById('career-next-btn');
+  if(cLives<=0){nb.textContent='Game Over…';}
+  else{
+    const ph=cPaths.phases[cPhaseIdx];
+    const isLastQ=cQIdx>=ph.questions.length-1;
+    const isLastPh=cPhaseIdx>=cPaths.phases.length-1;
+    if(isLastQ&&isLastPh) nb.textContent='See Results 🏆';
+    else if(isLastQ) nb.textContent='Next Phase →';
+    else nb.textContent='Next Question →';
+  }
+}
+document.getElementById('career-next-btn').addEventListener('click',()=>{
+  if(cLives<=0){document.getElementById('career-gameover').classList.add('active');document.getElementById('career-over-name').textContent=cCurrentF.name;return;}
+  const ph=cPaths.phases[cPhaseIdx];
+  cQIdx++;
+  if(cQIdx>=ph.questions.length){
+    cPhaseIdx++;cQIdx=0;
+    if(cPhaseIdx>=cPaths.phases.length){finishCareer(true);return;}
+  }
+  renderCareerQ();
+});
+document.getElementById('career-back-btn').addEventListener('click',()=>showScreen('home-screen'));
+document.getElementById('career-gameover-results-btn').addEventListener('click',()=>{document.getElementById('career-gameover').classList.remove('active');finishCareer(false);});
+function finishCareer(completed){
+  const totalQ=cPaths.phases.reduce((a,p)=>a+p.questions.length,0);
+  const pct=cScore/totalQ;
+  let grade;
+  if(!completed) grade='Career Cut Short 💔';
+  else if(pct>=.9) grade='Career Legend 🏆';
+  else if(pct>=.7) grade='Elite Performer 🌟';
+  else if(pct>=.5) grade='Solid Professional ⚽';
+  else grade='Career Journeyman 🎒';
+  document.getElementById('cr-score-big').textContent=cScore;
+  document.getElementById('cr-grade').textContent=grade;
+  document.getElementById('cr-xp').textContent='+'+cXP;
+  const oldXP=pd.xp;
+  pd.xp+=cXP;pd.gamesPlayed+=1;savePD();saveLB();updateHomeRank();
+  showRankResults(cXP,oldXP,'','cr-rank-icon','cr-rank-name',null,null,'career-rank-up-banner','career-rank-up-name');
+  showScreen('career-results-screen');
+}
+document.getElementById('cr-retry-btn').addEventListener('click',()=>openCareerModal());
+document.getElementById('cr-home-btn').addEventListener('click',()=>showScreen('home-screen'));
 
-/* ══ GUESS THE FOOTBALLER ══ */
-#guess-screen{justify-content:flex-start;padding:0;}
-.guess-body{flex:1;width:100%;max-width:660px;margin:0 auto;padding:20px 20px 36px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;}
-.clues-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-.clue-pts-badge{
-  background:linear-gradient(135deg,rgba(192,132,252,.2),rgba(192,132,252,.1));
-  border:1px solid rgba(192,132,252,.4);border-radius:100px;
-  padding:5px 13px;font-size:12px;font-weight:700;color:var(--purple);
+// ════════════════════════════════════════════
+// MODE 4: NAME ALL THE WINNERS
+// ════════════════════════════════════════════
+let wData=[],wFound=new Set(),wTimer=null,wTimeLeft=180,wMode='wc';
+function openWinnersModal(){document.getElementById('winners-modal').classList.add('active');}
+document.getElementById('winners-cancel-btn').addEventListener('click',()=>document.getElementById('winners-modal').classList.remove('active'));
+document.getElementById('wm-wc-btn').addEventListener('click',()=>{document.getElementById('winners-modal').classList.remove('active');startWinners('wc');});
+document.getElementById('wm-ucl-btn').addEventListener('click',()=>{document.getElementById('winners-modal').classList.remove('active');startWinners('ucl');});
+function startWinners(mode){
+  wMode=mode;
+  wData=mode==='wc'?WC_WINNERS:UCL_WINNERS;
+  wFound=new Set();wTimeLeft=180;clearInterval(wTimer);
+  document.getElementById('wh-title').textContent=mode==='wc'?'🌍 FIFA World Cup Winners':'⭐ UCL / European Cup Winners';
+  document.getElementById('winners-prog-text').textContent='0 / '+wData.length+' found';
+  document.getElementById('winners-score').textContent='0';
+  document.getElementById('winners-found-count').textContent='0';
+  document.getElementById('winners-total-count').textContent=wData.length;
+  document.getElementById('winners-input').value='';
+  document.getElementById('hint-feed').textContent='';
+  renderWinnersGrid();
+  showScreen('winners-screen');
+  startWTimer();
+  setTimeout(()=>document.getElementById('winners-input').focus(),300);
 }
-.clue-counter{font-size:11px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;}
-.clue-card{
-  background:linear-gradient(135deg,rgba(192,132,252,.07),rgba(11,24,41,.9));
-  border:1px solid rgba(192,132,252,.18);
-  border-radius:13px;padding:14px 18px;
-  animation:clueReveal .4s cubic-bezier(.34,1.56,.64,1) forwards;
-  display:flex;align-items:flex-start;gap:11px;
+function renderWinnersGrid(){
+  const g=document.getElementById('winners-grid');g.innerHTML='';
+  wData.forEach(w=>{
+    const found=wFound.has(w.year+'_'+w.name);
+    const slot=document.createElement('div');slot.className='winner-slot'+(found?' found':'');
+    const safeId='slot-'+w.year+'-'+w.name.replace(/[\s\/\\'"]+/g,'-');
+    slot.id=safeId;
+    slot.innerHTML=`<div class="ws-year">${w.year}</div><div class="ws-name">${found?w.name:'???'}</div><div class="ws-check">${found?'✅':''}</div>`;
+    g.appendChild(slot);
+  });
 }
-.clue-num{
-  width:26px;height:26px;border-radius:7px;
-  background:rgba(192,132,252,.2);border:1px solid rgba(192,132,252,.3);
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0;
+function getSlotId(w){return 'slot-'+w.year+'-'+w.name.replace(/[\s\/\\'"]+/g,'-');}
+function startWTimer(){
+  updateWTimer(wTimeLeft);
+  wTimer=setInterval(()=>{
+    wTimeLeft--;updateWTimer(wTimeLeft);
+    if(wTimeLeft<=0){clearInterval(wTimer);endWinners();}
+  },1000);
 }
-.clue-cat{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--purple);font-weight:700;margin-bottom:3px;}
-.clue-text{font-size:14px;line-height:1.5;color:var(--white);}
-.reveal-btn-wrap{display:flex;justify-content:flex-start;}
-.btn-reveal{
-  background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.3);
-  border-radius:100px;padding:9px 18px;font-size:12px;font-weight:600;
-  color:var(--purple);cursor:pointer;transition:var(--t);
-  display:flex;align-items:center;gap:6px;
+function updateWTimer(left){
+  const m=Math.floor(left/60);const s=left%60;
+  document.getElementById('wh-timer-num').textContent=m+':'+(s<10?'0':'')+s;
+  const circ=163.4;const offset=circ-(left/180)*circ;
+  const ring=document.getElementById('wh-ring-fill');ring.style.strokeDashoffset=offset;
+  if(left<=30) ring.style.stroke='var(--red)';
+  else if(left<=60) ring.style.stroke='var(--gold)';
+  else ring.style.stroke='var(--orange)';
 }
-.btn-reveal:hover{background:rgba(192,132,252,.2);}
-.btn-reveal:disabled{opacity:.3;cursor:default;}
-.guess-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
-.g-opt-btn{
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  border-radius:13px;padding:15px 13px;color:var(--white);
-  font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;
-  cursor:pointer;text-align:left;transition:var(--t);
-  display:flex;align-items:center;gap:9px;
+function checkWinnersInput(){
+  const inp=document.getElementById('winners-input');
+  const val=inp.value.trim().toLowerCase();
+  if(!val) return;
+  let matched=false;
+  wData.forEach(w=>{
+    const key=w.year+'_'+w.name;
+    if(wFound.has(key)) return;
+    const nameL=w.name.toLowerCase();
+    const aliases={'west germany':'west germany','w germany':'west germany','germany':'germany','england':'england','brasil':'brazil','man utd':'manchester united','man united':'manchester united','man city':'manchester city','real':'real madrid','barca':'barcelona','ac milan':'ac milan','milan':'ac milan','inter':'inter milan','dortmund':'borussia dortmund','steaua':'steaua bucharest','red star':'red star belgrade','forest':'nottingham forest','nottm forest':'nottingham forest','psv':'psv eindhoven'};
+    const check=aliases[val]||val;
+    if(nameL.includes(check)||check.includes(nameL.split(' ')[0])||nameL===check){
+      wFound.add(key);matched=true;
+      const slot=document.getElementById(getSlotId(w));
+      if(slot){slot.className='winner-slot found';slot.querySelector('.ws-name').textContent=w.name;slot.querySelector('.ws-check').textContent='✅';}
+    }
+  });
+  if(matched){
+    inp.value='';
+    const found=wFound.size;
+    document.getElementById('winners-found-count').textContent=found;
+    document.getElementById('winners-score').textContent=found;
+    document.getElementById('winners-prog-text').textContent=found+' / '+wData.length+' found';
+    document.getElementById('hint-feed').textContent='✅ Got one!';
+    document.getElementById('hint-feed').style.color='var(--green)';
+    setTimeout(()=>{document.getElementById('hint-feed').textContent='';},1000);
+    if(found===wData.length){clearInterval(wTimer);setTimeout(()=>endWinners(),500);}
+  }else{
+    document.getElementById('winners-input').classList.add('wrong-flash');
+    document.getElementById('hint-feed').textContent='❌ Not found or already entered';
+    document.getElementById('hint-feed').style.color='var(--red)';
+    setTimeout(()=>{document.getElementById('winners-input').classList.remove('wrong-flash');document.getElementById('hint-feed').textContent='';},1200);
+  }
 }
-.g-opt-btn:hover:not(:disabled){background:var(--purple-dim);border-color:rgba(192,132,252,.4);transform:translateY(-1px);}
-.g-opt-btn:disabled{cursor:default;}
-.g-opt-btn.correct{background:rgba(0,230,118,.14);border-color:var(--green);color:var(--green);}
-.g-opt-btn.wrong{background:rgba(255,61,87,.12);border-color:var(--red);color:var(--red);}
-.guess-feedback{
-  background:var(--pitch-card);border:1px solid rgba(192,132,252,.25);
-  border-radius:18px;padding:22px;text-align:center;
-  animation:fadeUp .4s both;display:none;
+document.getElementById('winners-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkWinnersInput();});
+document.getElementById('winners-submit-btn').addEventListener('click',checkWinnersInput);
+document.getElementById('winners-back-btn').addEventListener('click',()=>{clearInterval(wTimer);showScreen('home-screen');});
+function endWinners(){
+  clearInterval(wTimer);
+  const found=wFound.size;const total=wData.length;
+  wData.forEach(w=>{
+    const key=w.year+'_'+w.name;
+    if(!wFound.has(key)){
+      const slot=document.getElementById(getSlotId(w));
+      if(slot){slot.className='winner-slot missed';slot.querySelector('.ws-name').textContent=w.name;slot.querySelector('.ws-check').textContent='❌';}
+    }
+  });
+  const missed=wData.filter(w=>!wFound.has(w.year+'_'+w.name)).map(w=>w.name);
+  const uniqueMissed=[...new Set(missed)];
+  const xpe=found*5+(found===total?50:0);
+  document.getElementById('wo-found').textContent=found;
+  document.getElementById('wo-total').textContent=total;
+  document.getElementById('wo-missed').textContent=uniqueMissed.length?uniqueMissed.slice(0,5).join(', ')+(uniqueMissed.length>5?' +more':''):'None — perfect!';
+  document.getElementById('wo-xp').textContent='+'+xpe;
+  const oldXP=pd.xp;
+  pd.xp+=xpe;pd.gamesPlayed+=1;savePD();saveLB();updateHomeRank();
+  showRankResults(xpe,oldXP,'','wo-rank-icon','wo-rank-name',null,null,'winners-rank-up-banner','winners-rank-up-name');
+  document.getElementById('winners-gameover').classList.add('active');
 }
-.gf-icon{font-size:38px;margin-bottom:7px;}
-.gf-name{font-family:'Black Han Sans',sans-serif;font-size:26px;margin-bottom:5px;}
-.gf-detail{font-size:12px;color:var(--grey);line-height:1.5;margin-bottom:10px;}
-.gf-card-reveal{display:flex;justify-content:center;margin-top:8px;}
-
-/* Footballer Card */
-.fc-card{
-  width:134px;border-radius:15px;overflow:hidden;
-  position:relative;cursor:pointer;transition:var(--t);flex-shrink:0;
-}
-.fc-card:hover{transform:scale(1.05) rotate(1deg);}
-.fc-inner{border-radius:15px;overflow:hidden;position:relative;}
-.fc-bronze .fc-inner{background:linear-gradient(155deg,#2a1a0a,#3d2510);border:2px solid #cd7f32;box-shadow:0 0 18px rgba(205,127,50,.3);}
-.fc-silver .fc-inner{background:linear-gradient(155deg,#161e28,#1e2a38);border:2px solid #b8c0cc;box-shadow:0 0 18px rgba(184,192,204,.22);}
-.fc-gold .fc-inner{background:linear-gradient(155deg,#1a1400,#2a2200);border:2px solid var(--gold);box-shadow:0 0 22px rgba(255,196,0,.38);}
-.fc-legend .fc-inner{background:linear-gradient(155deg,#1a0808,#220a1a);border:2px solid #ff6b6b;box-shadow:0 0 28px rgba(255,107,107,.5);animation:legendGlow 2s ease-in-out infinite;}
-.fc-emoji{height:82px;display:flex;align-items:center;justify-content:center;font-size:42px;background:rgba(255,255,255,.03);position:relative;}
-.fc-rtag{position:absolute;top:5px;right:5px;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:100px;}
-.fc-bronze .fc-rtag{background:rgba(205,127,50,.2);color:#cd7f32;}
-.fc-silver .fc-rtag{background:rgba(184,192,204,.15);color:#b8c0cc;}
-.fc-gold .fc-rtag{background:rgba(255,196,0,.2);color:var(--gold);}
-.fc-legend .fc-rtag{background:rgba(255,107,107,.2);color:#ff6b6b;}
-.fc-info{padding:9px 9px 11px;}
-.fc-name{font-family:'Black Han Sans',sans-serif;font-size:12px;line-height:1.1;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fc-nation{font-size:10px;color:var(--grey);}
-.fc-stats{display:flex;justify-content:space-between;margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.06);}
-.fc-stat-val{font-family:'Black Han Sans',sans-serif;font-size:13px;line-height:1;}
-.fc-stat-lbl{font-size:8px;color:var(--grey);text-transform:uppercase;letter-spacing:.5px;}
-.fc-locked{position:absolute;inset:0;background:rgba(6,14,26,.85);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:13px;gap:5px;}
-.fc-locked .li{font-size:26px;opacity:.5;}
-.fc-locked .ll{font-size:9px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;}
-
-/* Guess results */
-#guess-results-screen{justify-content:flex-start;padding:36px 16px;gap:0;text-align:center;}
-.gr-top{margin-bottom:22px;animation:fadeUp .5s both;}
-.gr-icon{font-size:52px;margin-bottom:10px;}
-.gr-title{font-family:'Black Han Sans',sans-serif;font-size:38px;margin-bottom:10px;}
-.gr-score-wrap{display:flex;align-items:baseline;justify-content:center;gap:5px;margin-bottom:4px;}
-.gr-big{font-family:'Black Han Sans',sans-serif;font-size:68px;color:var(--purple);line-height:1;}
-.gr-max{font-size:18px;color:var(--grey);}
-.gr-grade{font-size:14px;color:var(--grey);margin-bottom:24px;animation:fadeUp .5s .2s both;}
-.unlocked-section{width:100%;max-width:480px;margin-bottom:22px;animation:fadeUp .5s .3s both;}
-.unlocked-hdr{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--purple);margin-bottom:12px;}
-.unlocked-grid{display:flex;gap:11px;justify-content:center;flex-wrap:wrap;}
-
-/* ══ CAREER PATH MODE ══ */
-#career-screen{justify-content:flex-start;padding:0;}
-.career-body{flex:1;width:100%;max-width:660px;margin:0 auto;padding:20px 20px 36px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
-.career-header-info{
-  background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(0,229,255,.04));
-  border:1px solid rgba(0,229,255,.2);border-radius:14px;padding:16px 20px;
-}
-.ch-footballer{font-family:'Black Han Sans',sans-serif;font-size:28px;margin-bottom:2px;}
-.ch-sub{font-size:12px;color:var(--grey);}
-.ch-progress{
-  display:flex;align-items:center;gap:10px;margin-top:12px;
-}
-.ch-prog-bar{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
-.ch-prog-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .5s ease;}
-.ch-prog-lbl{font-size:11px;color:var(--teal);}
-.career-phase-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);
-  border-radius:100px;padding:5px 13px;font-size:11px;font-weight:700;
-  color:var(--teal);align-self:flex-start;letter-spacing:1px;
-}
-.career-question-text{font-family:'Black Han Sans',sans-serif;font-size:clamp(18px,4vw,28px);line-height:1.2;letter-spacing:.2px;}
-.career-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
-.career-opt{
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  border-radius:13px;padding:15px 13px;color:var(--white);
-  font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;
-  cursor:pointer;text-align:left;transition:var(--t);
-  display:flex;align-items:flex-start;gap:9px;
-}
-.career-opt:hover:not(:disabled){background:rgba(0,229,255,.06);border-color:rgba(0,229,255,.3);transform:translateY(-1px);}
-.career-opt:disabled{cursor:default;}
-.career-opt.correct{background:rgba(0,230,118,.14);border-color:var(--green);color:var(--green);}
-.career-opt.wrong{background:rgba(255,61,87,.12);border-color:var(--red);color:var(--red);}
-.career-fb{
-  background:var(--pitch-card);border:1px solid rgba(0,229,255,.2);
-  border-radius:14px;padding:15px 18px;font-size:13px;line-height:1.5;
-  color:rgba(240,244,255,.8);display:none;animation:fadeUp .3s forwards;
-}
-.career-fb.show{display:block;}
-.career-fb.correct{border-color:rgba(0,230,118,.3);}
-.career-fb.wrong{border-color:rgba(255,61,87,.2);}
-.career-fb-lbl{font-family:'Black Han Sans',sans-serif;font-size:17px;margin-bottom:4px;}
-.career-fb.correct .career-fb-lbl{color:var(--green);}
-.career-fb.wrong .career-fb-lbl{color:var(--red);}
-.career-footballer-card{
-  display:flex;align-items:center;gap:14px;
-  background:linear-gradient(135deg,rgba(0,229,255,.06),rgba(11,24,41,.9));
-  border:1px solid rgba(0,229,255,.15);border-radius:14px;padding:14px 18px;
-}
-.cfc-emoji{font-size:36px;}
-.cfc-name{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--teal);}
-.cfc-sub{font-size:12px;color:var(--grey);}
-.lives-row{display:flex;align-items:center;gap:4px;}
-.life-dot{font-size:15px;transition:all .3s;}
-.life-dot.lost{opacity:.2;filter:grayscale(1);}
-.career-gameover{
-  position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);
-  z-index:300;display:none;align-items:center;justify-content:center;
-  flex-direction:column;text-align:center;padding:24px;
-}
-.career-gameover.active{display:flex;}
-.career-results{justify-content:flex-start;padding:36px 16px;gap:0;text-align:center;}
-
-/* ══ NAME ALL WINNERS MODE ══ */
-#winners-screen{justify-content:flex-start;padding:0;}
-.winners-body{flex:1;width:100%;max-width:760px;margin:0 auto;padding:20px 20px 36px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
-.winners-header-info{
-  background:linear-gradient(135deg,rgba(255,109,0,.08),rgba(255,109,0,.04));
-  border:1px solid rgba(255,109,0,.22);border-radius:14px;padding:16px 20px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-}
-.whi-left .wh-title{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--orange);}
-.whi-left .wh-sub{font-size:12px;color:var(--grey);margin-top:2px;}
-.wh-timer{
-  position:relative;width:60px;height:60px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-}
-.wh-timer svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);}
-.wh-ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:4;}
-.wh-ring-fill{fill:none;stroke:var(--orange);stroke-width:4;stroke-linecap:round;stroke-dasharray:165;stroke-dashoffset:0;transition:stroke-dashoffset .5s linear,stroke .3s;}
-.wh-timer-num{position:relative;z-index:1;font-family:'Black Han Sans',sans-serif;font-size:18px;}
-.winners-toggle{
-  display:flex;gap:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
-  border-radius:100px;overflow:hidden;align-self:flex-start;
-}
-.wt-btn{
-  padding:8px 20px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  border:none;background:transparent;color:var(--grey);cursor:pointer;transition:var(--t);
-}
-.wt-btn.active{background:var(--orange);color:#000;}
-.winners-input-area{display:flex;gap:8px;}
-.w-input{
-  flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);
-  border-radius:12px;padding:13px 16px;color:var(--white);
-  font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:var(--t);
-}
-.w-input:focus{border-color:var(--orange);}
-.w-input::placeholder{color:var(--grey);}
-.w-submit{
-  background:var(--orange);color:#fff;border:none;border-radius:12px;
-  padding:13px 20px;font-family:'Black Han Sans',sans-serif;font-size:14px;
-  cursor:pointer;transition:var(--t);white-space:nowrap;
-}
-.w-submit:hover{background:#ff8124;}
-.winners-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:8px;
-}
-.winner-slot{
-  background:var(--pitch-card);border:1px solid var(--pitch-border);
-  border-radius:12px;padding:10px 14px;
-  display:flex;align-items:center;gap:10px;
-  transition:var(--t);
-}
-.winner-slot.found{
-  background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.3);
-  animation:slotReveal .4s cubic-bezier(.34,1.56,.64,1);
-}
-.winner-slot.missed{background:rgba(255,61,87,.08);border-color:rgba(255,61,87,.25);}
-.ws-year{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--grey);min-width:36px;}
-.ws-name{font-size:13px;font-weight:600;color:var(--grey);}
-.winner-slot.found .ws-name{color:var(--green);}
-.winner-slot.missed .ws-name{color:var(--red);}
-.ws-check{font-size:14px;margin-left:auto;}
-.progress-label{font-size:13px;color:var(--grey);}
-.progress-label span{color:var(--orange);font-weight:700;}
-.winners-gameover{
-  position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);
-  z-index:300;display:none;align-items:center;justify-content:center;
-  flex-direction:column;text-align:center;padding:24px;gap:16px;
-}
-.winners-gameover.active{display:flex;}
-.hint-feed{
-  font-size:12px;color:var(--orange);text-align:center;
-  min-height:18px;animation:fadeUp .3s both;
-}
-.wrong-flash{animation:wrongShake .4s;}
-
-/* ══ LEADERBOARD ══ */
-#leaderboard-screen{justify-content:flex-start;padding:80px 16px 32px;}
-.lb-hdr{text-align:center;margin-bottom:28px;animation:fadeUp .5s both;}
-.lb-hdr h2{font-family:'Black Han Sans',sans-serif;font-size:44px;}
-.lb-hdr p{color:var(--grey);font-size:13px;margin-top:4px;}
-.lb-table{width:100%;max-width:520px;display:flex;flex-direction:column;gap:7px;animation:fadeUp .5s .2s both;margin-bottom:22px;}
-.lb-row{display:flex;align-items:center;gap:12px;background:var(--pitch-card);border:1px solid var(--pitch-border);border-radius:13px;padding:13px 16px;transition:var(--t);}
-.lb-row.is-me{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.04);}
-.lb-row.top-1{border-color:rgba(255,196,0,.3);background:rgba(255,196,0,.04);}
-.lb-rnum{font-family:'Black Han Sans',sans-serif;font-size:20px;min-width:26px;text-align:center;color:var(--grey);}
-.lb-row.top-1 .lb-rnum{color:var(--gold);}
-.lb-row.top-2 .lb-rnum{color:#b8c0cc;}
-.lb-row.top-3 .lb-rnum{color:#cd7f32;}
-.lb-icon{font-size:20px;}
-.lb-info{flex:1;}
-.lb-name{font-size:14px;font-weight:600;}
-.lb-sub{font-size:10px;color:var(--grey);margin-top:1px;}
-.lb-xp{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--gold);}
-.lb-empty{text-align:center;color:var(--grey);font-size:13px;padding:36px 0;}
-
-/* ══ COLLECTABLES ══ */
-#collectables-screen{justify-content:flex-start;padding:60px 16px 32px;gap:0;}
-.col-hdr{text-align:center;margin-bottom:20px;}
-.col-hdr h2{font-family:'Black Han Sans',sans-serif;font-size:36px;}
-.col-hdr p{color:var(--grey);font-size:13px;margin-top:4px;}
-.col-filters{display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap;justify-content:center;}
-.col-filter{background:var(--pitch-card);border:1px solid var(--pitch-border);border-radius:100px;padding:6px 14px;font-size:11px;font-weight:700;color:var(--grey);cursor:pointer;transition:var(--t);letter-spacing:1px;text-transform:uppercase;}
-.col-filter:hover,.col-filter.active{background:rgba(255,255,255,.1);color:var(--white);border-color:rgba(255,255,255,.3);}
-.col-filter[data-rarity="bronze"].active{border-color:#cd7f32;color:#cd7f32;}
-.col-filter[data-rarity="silver"].active{border-color:#b8c0cc;color:#b8c0cc;}
-.col-filter[data-rarity="gold"].active{border-color:var(--gold);color:var(--gold);}
-.col-filter[data-rarity="legend"].active{border-color:#ff6b6b;color:#ff6b6b;}
-.col-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:11px;width:100%;max-width:680px;padding-bottom:32px;}
-
-/* ══ CARD DETAIL MODAL ══ */
-.card-detail-box{
-  background:#0b1828;border-radius:22px;padding:28px;
-  max-width:340px;width:100%;text-align:center;
-  animation:popIn .3s cubic-bezier(.34,1.56,.64,1) forwards;position:relative;
-}
-.cd-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.07);border:none;border-radius:50%;width:30px;height:30px;color:var(--white);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:var(--t);}
-.cd-close:hover{background:rgba(255,255,255,.14);}
-.cd-emoji{font-size:68px;margin-bottom:7px;}
-.cd-name{font-family:'Black Han Sans',sans-serif;font-size:28px;margin-bottom:4px;}
-.cd-sub{font-size:13px;margin-bottom:18px;}
-.cd-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
-.cds-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:10px 7px;}
-.cds-val{font-family:'Black Han Sans',sans-serif;font-size:22px;line-height:1;}
-.cds-lbl{font-size:9px;color:var(--grey);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
-.cd-bio{font-size:12px;color:rgba(240,244,255,.7);line-height:1.6;text-align:left;}
-.cd-locked-msg{color:var(--grey);font-size:13px;padding:16px 0;}
-
-/* ══ XP FLOAT ══ */
-.xp-float{position:fixed;pointer-events:none;font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--gold);z-index:500;animation:xpFloat 1.2s ease forwards;}
-
-/* ══ ANIMATIONS ══ */
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-@keyframes popIn{from{opacity:0;transform:scale(.87)}to{opacity:1;transform:scale(1)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
-@keyframes wrongShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes rankUpPulse{0%{opacity:0;transform:scale(.82)}60%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
-@keyframes xpFloat{0%{opacity:0;transform:translateY(0) scale(.8)}30%{opacity:1;transform:translateY(-10px) scale(1.1)}70%{opacity:1;transform:translateY(-22px) scale(1)}100%{opacity:0;transform:translateY(-44px) scale(.9)}}
-@keyframes clueReveal{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes legendGlow{0%,100%{box-shadow:0 0 26px rgba(255,107,107,.5)}50%{box-shadow:0 0 46px rgba(255,107,107,.8),0 0 70px rgba(255,107,107,.3)}}
-@keyframes slotReveal{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-.slide-out{animation:slideOut .18s forwards}
-.slide-in{animation:slideIn .28s forwards}
-@keyframes slideOut{to{opacity:0;transform:translateX(-26px)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:translateX(0)}}
-
-/* ══ GUESS STREAK ══ */
-.guess-streak-bar{
-  width:100%;background:linear-gradient(135deg,rgba(192,132,252,.18),rgba(255,196,0,.1));
-  border-bottom:1px solid rgba(192,132,252,.3);text-align:center;
-  padding:6px 14px;font-size:12px;font-weight:700;color:var(--gold);
-  letter-spacing:1px;display:none;
-}
-.guess-streak-bar.on{display:block;}
-.mult-badge{
-  font-family:'Black Han Sans',sans-serif;font-size:12px;
-  background:linear-gradient(135deg,#a78bfa,#7c3aed);
-  color:#fff;border-radius:100px;padding:2px 7px;margin-left:3px;
-}
-.ft-diff-badge{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 7px;border-radius:100px;white-space:nowrap;}
-.ft-diff-badge.easy{background:rgba(0,230,118,.14);color:var(--green);border:1px solid rgba(0,230,118,.3);}
-.ft-diff-badge.hard{background:rgba(255,152,0,.14);color:#ff9800;border:1px solid rgba(255,152,0,.3);}
-.ft-diff-badge.legendary{background:rgba(255,107,107,.14);color:#ff6b6b;border:1px solid rgba(255,107,107,.3);}
-
-/* ══ CAREER DIFF ══ */
-.cq-diff{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:100px;display:inline-block;margin-bottom:8px;}
-.cq-diff.beginner{background:rgba(0,230,118,.14);color:var(--green);}
-.cq-diff.youth{background:rgba(0,229,255,.12);color:var(--teal);}
-.cq-diff.pro{background:rgba(255,196,0,.14);color:var(--gold);}
-.cq-diff.prime{background:rgba(255,61,87,.14);color:var(--red);}
-.cq-diff.legend{background:rgba(192,132,252,.14);color:var(--purple);}
-
-@media(max-width:500px){
-  .mode-grid{grid-template-columns:1fr 1fr;}
-  .opts-grid,.guess-opts,.career-opts{grid-template-columns:1fr;}
-  .modal-box{padding:28px 22px;}
-  .quiz-header{padding:14px 16px;}
-  .quiz-body,.guess-body,.career-body,.winners-body{padding:14px 14px 24px;}
-  .stats-row{flex-wrap:wrap;}
-  .xp-gained-box{flex-direction:column;text-align:center;}
-  .rank-badge-row{justify-content:center;}
-  .rank-prog-bar{margin:0 auto;}
-  .winners-grid{grid-template-columns:1fr 1fr;}
-}
-@media(max-width:360px){.home-title{font-size:52px;}.mode-name{font-size:17px;}}
+document.getElementById('wo-retry-btn').addEventListener('click',()=>{document.getElementById('winners-gameover').classList.remove('active');startWinners(wMode);});
+document.getElementById('wo-home-btn').addEventListener('click',()=>{document.getElementById('winners-gameover').classList.remove('active');showScreen('home-screen');});
